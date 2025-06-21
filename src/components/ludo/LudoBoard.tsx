@@ -84,21 +84,12 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove, d
   };
 
   const renderArrows = () => {
-    const redStart = PATH_MAP.red[0];
-    const greenStart = PATH_MAP.green[0];
-    const yellowStart = PATH_MAP.yellow[0];
-    const blueStart = PATH_MAP.blue[0];
     const arrowBaseClass = "w-4 h-4 z-10 place-self-center pointer-events-none";
-    
-    // Red moves Right from {7,2} -> {7,3}
-    // Green moves Down from {2,9} -> {3,9}
-    // Yellow moves Left from {9,14} -> {9,13}
-    // Blue moves Up from {14,7} -> {13,7}
 
-    const redArrowPos = PATH_MAP.red[START_INDICES.red];
-    const greenArrowPos = PATH_MAP.green[START_INDICES.green - 13];
-    const yellowArrowPos = PATH_MAP.yellow[START_INDICES.yellow - 26];
-    const blueArrowPos = PATH_MAP.blue[START_INDICES.blue - 39];
+    const redArrowPos = PATH_MAP.red[0];
+    const greenArrowPos = PATH_MAP.green[0];
+    const yellowArrowPos = PATH_MAP.yellow[0];
+    const blueArrowPos = PATH_MAP.blue[0];
 
     return (
         <>
@@ -168,10 +159,7 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove, d
                   'bg-blue-400': (type === 'home-path' && color === 'blue') || isBlueStart,
                 }
               )}>
-                {isWhiteBox && id === 'path-main-51' ? (
-                     <span className="text-black text-xs font-semibold">52</span>
-                ) : (isSafe && isWhiteBox && <Star className={cn("w-3/4 h-3/4", 'text-black/20')} />)
-                }
+                {isSafe && isWhiteBox && <Star className={cn("w-3/4 h-3/4", 'text-black/20')} />}
                 {isSafe && !isWhiteBox && <Star className={cn("w-3/4 h-3/4", 'text-white/80')} />}
               </div>
             );
