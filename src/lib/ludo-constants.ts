@@ -27,7 +27,7 @@ export const FINISHED_POS = 56; // 50 (main) + 6 (home)
 // --- Board Rendering Constants ---
 
 // This is the absolute path for all players. Rotations are applied later.
-const ABSOLUTE_PATH: GridPos[] = [
+export const ABSOLUTE_PATH: GridPos[] = [
     {row: 7, col: 2}, {row: 7, col: 3}, {row: 7, col: 4}, {row: 7, col: 5}, {row: 7, col: 6},
     {row: 6, col: 7}, {row: 5, col: 7}, {row: 4, col: 7}, {row: 3, col: 7}, {row: 2, col: 7}, {row: 1, col: 7},
     {row: 1, col: 8},
@@ -110,7 +110,7 @@ const createPlayerPath = (startIdx: number, path: GridPos[]) => {
     return mainPath.slice(0, 51);
 }
 
-const START_INDICES: Record<PlayerColor, number> = { red: 0, green: 13, yellow: 26, blue: 39 };
+export const START_INDICES: Record<PlayerColor, number> = { red: 0, green: 13, yellow: 26, blue: 39 };
 
 // PATH_MAP takes a player's logical position (0-50) and returns the GridPos on the board.
 export const PATH_MAP: Record<PlayerColor, GridPos[]> = {
