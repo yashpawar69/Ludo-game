@@ -1,16 +1,15 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, RotateCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PLAYER_COLORS } from '@/lib/ludo-constants';
+import type { PlayerColor } from './LudoGame';
 
-type PlayerColor = 'red' | 'green' | 'yellow' | 'blue';
 
 interface DiceProps {
-  isRolling: boolean;
   onRoll: (value: number) => void;
   value: number | null;
   activePlayerColor: PlayerColor;
@@ -27,38 +26,49 @@ const diceIcons = [
 ];
 
 export function Dice({ onRoll, value, activePlayerColor, disabled }: DiceProps) {
-    const [internalIsRolling, setInternalIsRolling] = useState(false);
+    const [isRolling, setIsRolling] = useState(false);
+    const [displayValue, setDisplayValue] = useState(value);
+
+    useEffect(() => {
+        if (!isRolling) {
+            setDisplayValue(value);
+        }
+    }, [value, isRolling]);
 
     const handleRoll = () => {
-        if (disabled) return;
-        setInternalIsRolling(true);
+        if (disabled || isRolling) return;
+        setIsRolling(true);
+
         let rollCount = 0;
         const rollInterval = setInterval(() => {
-            onRoll(Math.floor(Math.random() * 6) + 1);
+            setDisplayValue(Math.floor(Math.random() * 6) + 1);
             rollCount++;
             if (rollCount > 10) { // Roll for a bit
                 clearInterval(rollInterval);
-                setInternalIsRolling(false);
-                onRoll(Math.floor(Math.random() * 6) + 1);
+                const finalValue = Math.floor(Math.random() * 6) + 1;
+                onRoll(finalValue); // Call parent once with the final value
+                setIsRolling(false);
             }
-        }, 100);
+        }, 80);
     };
+
+    const currentDisplayValue = isRolling ? displayValue : value;
 
     return (
         <div className="flex flex-col items-center justify-center gap-4 p-4 bg-card rounded-lg shadow-md">
             <motion.div
                 className="w-24 h-24 p-2 rounded-lg text-foreground"
                 animate={{
-                    rotate: internalIsRolling ? 360 : 0,
-                    scale: internalIsRolling ? 1.1 : 1,
+                    rotate: isRolling ? 360 : 0,
+                    scale: isRolling ? 1.1 : 1,
                 }}
-                transition={{ duration: 0.5, ease: 'easeInOut' }}
+                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
             >
-                {value ? diceIcons[value - 1] : <div className="w-full h-full border-2 border-dashed rounded-md flex items-center justify-center text-muted-foreground">?</div>}
+                {currentDisplayValue ? diceIcons[currentDisplayValue - 1] : <div className="w-full h-full border-2 border-dashed rounded-md flex items-center justify-center text-muted-foreground">?</div>}
             </motion.div>
             <Button
                 onClick={handleRoll}
-                disabled={disabled || internalIsRolling}
+                disabled={disabled || isRolling}
                 className={cn(
                     "w-full text-lg font-bold",
                     !disabled && PLAYER_COLORS[activePlayerColor].bg,
@@ -66,8 +76,8 @@ export function Dice({ onRoll, value, activePlayerColor, disabled }: DiceProps) 
                     "text-primary-foreground"
                 )}
             >
-                {internalIsRolling ? <RotateCw className="mr-2 h-5 w-5 animate-spin" /> : null}
-                {internalIsRolling ? 'Rolling...' : 'Roll Dice'}
+                {isRolling ? <RotateCw className="mr-2 h-5 w-5 animate-spin" /> : null}
+                {isRolling ? 'Rolling...' : 'Roll Dice'}
             </Button>
         </div>
     );
