@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
-import { PATH_MAP, isSafeSquare, START_POS, HOME_PATH_START_POS, FINISHED_POS } from '@/lib/ludo-constants';
+import { PATH_MAP, isSafeSquare, START_POS, HOME_PATH_START_POS, FINISHED_POS, START_INDICES, ABSOLUTE_PATH } from '@/lib/ludo-constants';
 import { cn } from '@/lib/utils';
 
 export type PlayerColor = 'red' | 'green' | 'yellow' | 'blue';
@@ -52,38 +52,36 @@ export function LudoGame({ roomId, initialPlayers }: { roomId: string, initialPl
 
   const getMovableTokensForPlayer = useCallback((player: Player, roll: number): number[] => {
     const movable: number[] = [];
-    const playerTokens = player.tokens;
     
-    playerTokens.forEach((pos, tokenIndex) => {
+    player.tokens.forEach((pos, tokenIndex) => {
         if (pos === FINISHED_POS) return;
 
         if (pos === -1) {
             if (roll === 6) {
                 const startPos = START_POS;
-                const startSquareIsBlocked = playerTokens.some(p => p === startPos);
-                if (!startSquareIsBlocked) {
+                const isStartSquareOccupiedBySelf = player.tokens.some(p => p === startPos);
+                if (!isStartSquareOccupiedBySelf) {
                     movable.push(tokenIndex);
                 }
             }
             return;
         }
 
-        if (pos > HOME_PATH_START_POS) {
+        const mainPathLength = 51;
+
+        if (pos < HOME_PATH_START_POS) { 
+            if (pos + roll > mainPathLength) { 
+                const homePathPos = HOME_PATH_START_POS + (pos + roll - mainPathLength);
+                if (homePathPos <= FINISHED_POS) {
+                    movable.push(tokenIndex);
+                }
+            } else { 
+                movable.push(tokenIndex);
+            }
+        } else { 
             if (pos + roll <= FINISHED_POS) {
                 movable.push(tokenIndex);
             }
-            return;
-        }
-        
-        const pathEntryPos = PATH_MAP[player.id].length - 1;
-        const currentPathPos = player.tokens.indexOf(pos);
-        if(currentPathPos + roll <= pathEntryPos){
-            movable.push(tokenIndex);
-        } else {
-             const homePathEntry = pos + roll - pathEntryPos;
-             if(HOME_PATH_START_POS + homePathEntry <= FINISHED_POS){
-                movable.push(tokenIndex)
-             }
         }
     });
 
@@ -100,34 +98,33 @@ export function LudoGame({ roomId, initialPlayers }: { roomId: string, initialPl
     const currentPos = playerToMove.tokens[tokenIndex];
 
     let newPos: number;
+    const mainPathLength = 51;
 
     if (currentPos === -1) { 
         newPos = START_POS;
-    } else if (currentPos + diceValue > HOME_PATH_START_POS) {
+    } else if (currentPos >= HOME_PATH_START_POS) {
         newPos = currentPos + diceValue;
+    } else if (currentPos + diceValue > mainPathLength) {
+        newPos = HOME_PATH_START_POS + (currentPos + diceValue - mainPathLength);
     } else {
-        const pathEntryPos = PATH_MAP[playerToMove.id].length - 1;
-        const currentPathPos = playerToMove.tokens.indexOf(currentPos);
-
-        if(currentPathPos + diceValue <= pathEntryPos){
-            newPos = currentPos + diceValue
-        } else {
-            const homePathEntry = currentPos + diceValue - pathEntryPos;
-            newPos = HOME_PATH_START_POS + homePathEntry;
-        }
+        newPos = currentPos + diceValue;
     }
-
+    
     playerToMove.tokens[tokenIndex] = newPos;
 
-    if (newPos <= HOME_PATH_START_POS) {
-        const targetGridPos = PATH_MAP[playerToMove.id][newPos];
+    if (newPos < HOME_PATH_START_POS) {
+        const playerStartIdx = START_INDICES[playerToMove.id];
+        const targetAbsIdx = (playerStartIdx + newPos) % 52;
+        const targetGridPos = ABSOLUTE_PATH[targetAbsIdx];
+
         if (targetGridPos && !isSafeSquare(targetGridPos)) {
             newPlayers.forEach(p => {
                 if (p.id !== playerToMove.id) {
                     p.tokens = p.tokens.map((tokenPos) => {
-                        if (tokenPos > -1 && tokenPos <= HOME_PATH_START_POS) {
-                            const opponentGridPos = PATH_MAP[p.id][tokenPos];
-                            if (opponentGridPos && opponentGridPos.row === targetGridPos.row && opponentGridPos.col === targetGridPos.col) {
+                         if (tokenPos >= 0 && tokenPos < HOME_PATH_START_POS) {
+                            const opponentStartIdx = START_INDICES[p.id];
+                            const opponentAbsIdx = (opponentStartIdx + tokenPos) % 52;
+                            if (opponentAbsIdx === targetAbsIdx) {
                                 toast({ title: "Capture!", description: `${playerToMove.name} captured ${p.name}'s token!` });
                                 grantExtraTurn = true;
                                 return -1;
@@ -139,6 +136,7 @@ export function LudoGame({ roomId, initialPlayers }: { roomId: string, initialPl
             });
         }
     }
+
 
     if (playerToMove.tokens.every(p => p === FINISHED_POS)) {
         playerToMove.state = 'won';
@@ -169,11 +167,6 @@ export function LudoGame({ roomId, initialPlayers }: { roomId: string, initialPl
     const movable = getMovableTokensForPlayer(activePlayer, value);
     setMovableTokens(movable);
 
-    toast({
-        title: `${activePlayer.name} rolled a ${value}!`,
-        description: movable.length > 0 ? "Select a token to move." : "No available moves.",
-    });
-
     if (movable.length === 0) {
         setTimeout(() => {
             if (value !== 6) {
@@ -188,7 +181,7 @@ export function LudoGame({ roomId, initialPlayers }: { roomId: string, initialPl
            handleTokenMove(movable[0]);
         }, 1000);
     }
-  }, [activePlayer, getMovableTokensForPlayer, switchToNextPlayer, toast, handleTokenMove]);
+  }, [activePlayer, getMovableTokensForPlayer, switchToNextPlayer, handleTokenMove]);
 
   const getPlayerCardPosition = (index: number, totalPlayers: number) => {
     const positions = ['top-4 left-4', 'top-4 right-4', 'bottom-4 right-4', 'bottom-4 left-4'];
