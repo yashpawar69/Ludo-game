@@ -2,8 +2,8 @@
 
 import { cn } from '@/lib/utils';
 import { User, Crown } from 'lucide-react';
-import { PLAYER_COLORS, FINISHED_POS } from '@/lib/ludo-constants';
-import type { PlayerColor, Player } from './LudoGame';
+import { FINISHED_POS } from '@/lib/ludo-constants';
+import type { Player } from './LudoGame';
 
 interface PlayerCardProps {
   player: Player;
@@ -21,8 +21,18 @@ export function PlayerCard({ player, isActive }: PlayerCardProps) {
   return (
     <div className={cn(
         'p-2 rounded-lg shadow-lg border-2 transition-all duration-300',
-        PLAYER_COLORS[player.id].bg,
-        isActive ? `ring-4 ring-offset-2 ring-accent ring-offset-background` : PLAYER_COLORS[player.id].border
+        {
+            'bg-red-500': player.id === 'red',
+            'bg-green-500': player.id === 'green',
+            'bg-yellow-400': player.id === 'yellow',
+            'bg-blue-500': player.id === 'blue',
+        },
+        isActive ? `ring-4 ring-offset-2 ring-accent ring-offset-background` : {
+            'border-red-700': player.id === 'red',
+            'border-green-700': player.id === 'green',
+            'border-yellow-600': player.id === 'yellow',
+            'border-blue-700': player.id === 'blue',
+        }
     )}>
         <div className="flex items-center gap-3">
             <div className="flex-shrink-0">
@@ -41,7 +51,12 @@ export function PlayerCard({ player, isActive }: PlayerCardProps) {
                              )}
                              title={`Token ${i+1} status: ${getTokenStatus(pos)}`}>
                             {pos === FINISHED_POS && <Crown className="w-3 h-3 text-white" />}
-                            {pos > -1 && pos < FINISHED_POS && <div className={cn("w-2.5 h-2.5 rounded-full", PLAYER_COLORS[player.id].darkBg)}/>}
+                            {pos > -1 && pos < FINISHED_POS && <div className={cn("w-2.5 h-2.5 rounded-full", {
+                                'bg-red-700': player.id === 'red',
+                                'bg-green-700': player.id === 'green',
+                                'bg-yellow-600': player.id === 'yellow',
+                                'bg-blue-700': player.id === 'blue',
+                            })}/>}
                         </div>
                     ))}
                 </div>

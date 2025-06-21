@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, RotateCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { PLAYER_COLORS } from '@/lib/ludo-constants';
 import type { PlayerColor } from './LudoGame';
 
 
@@ -59,8 +58,12 @@ export function Dice({ onRoll, value, activePlayerColor, disabled }: DiceProps) 
             className={cn(
                 "relative w-20 h-20 p-2 rounded-lg text-white flex items-center justify-center shadow-lg",
                 "transition-colors duration-300",
-                !disabled && PLAYER_COLORS[activePlayerColor].bg,
-                !disabled && `hover:${PLAYER_COLORS[activePlayerColor].darkBg}`,
+                !disabled && {
+                    'bg-red-500 hover:bg-red-700': activePlayerColor === 'red',
+                    'bg-green-500 hover:bg-green-700': activePlayerColor === 'green',
+                    'bg-yellow-400 hover:bg-yellow-600': activePlayerColor === 'yellow',
+                    'bg-blue-500 hover:bg-blue-700': activePlayerColor === 'blue',
+                },
                 !disabled && "cursor-pointer",
                 disabled && "bg-muted-foreground/20 cursor-not-allowed"
             )}
