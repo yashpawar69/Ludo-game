@@ -58,11 +58,8 @@ export function LudoGame({ roomId, initialPlayers }: { roomId: string, initialPl
 
         if (pos === -1) {
             if (roll === 6) {
-                const startPos = START_POS;
-                const isStartSquareOccupiedBySelf = player.tokens.some(p => p === startPos);
-                if (!isStartSquareOccupiedBySelf) {
-                    movable.push(tokenIndex);
-                }
+                // Allow unlocking a piece even if the start square is occupied by another piece.
+                movable.push(tokenIndex);
             }
             return;
         }
@@ -70,8 +67,9 @@ export function LudoGame({ roomId, initialPlayers }: { roomId: string, initialPl
         const mainPathLength = 51;
 
         if (pos < HOME_PATH_START_POS) { 
-            if (pos + roll > mainPathLength) { 
-                const homePathPos = HOME_PATH_START_POS + (pos + roll - (mainPathLength + 1));
+            const homeEntryPos = mainPathLength;
+            if (pos + roll > homeEntryPos) { 
+                const homePathPos = HOME_PATH_START_POS + (pos + roll - (homeEntryPos + 1));
                 if (homePathPos <= FINISHED_POS) {
                     movable.push(tokenIndex);
                 }
