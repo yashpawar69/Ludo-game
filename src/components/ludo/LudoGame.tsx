@@ -4,12 +4,11 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { LudoBoard } from './LudoBoard';
 import { PlayerCard } from './PlayerCard';
 import { Dice } from './Dice';
-import { Gamepad2, Home, LogOut, Crown } from 'lucide-react';
+import { Gamepad2, Crown, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -20,28 +19,23 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
-type PlayerColor = 'red' | 'green' | 'yellow' | 'blue';
-type Player = {
+export type PlayerColor = 'red' | 'green' | 'yellow' | 'blue';
+export type Player = {
   id: PlayerColor;
   name: string;
   tokens: number[]; // -1: base, 0-51: main path, 101-105: home path, 106: finished
   state: 'waiting' | 'playing' | 'won';
 };
 
-const initialPlayers: Player[] = [
-  { id: 'red', name: 'Player 1', tokens: [-1, -1, -1, -1], state: 'playing' },
-  { id: 'green', name: 'Player 2', tokens: [-1, -1, -1, -1], state: 'playing' },
-  { id: 'yellow', name: 'Player 3', tokens: [-1, -1, -1, -1], state: 'playing' },
-  { id: 'blue', name: 'Player 4', tokens: [-1, -1, -1, -1], state: 'playing' },
-];
-
-export function LudoGame({ roomId }: { roomId: string }) {
+export function LudoGame({ roomId, initialPlayers }: { roomId: string, initialPlayers: Player[] }) {
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
-  const [activePlayer, setActivePlayer] = useState<PlayerColor>('red');
-  const [diceValue, setDiceValue] = useState<number | null>(6);
+  const [activePlayer, setActivePlayer] = useState<PlayerColor>(initialPlayers[0]?.id || 'red');
+  const [diceValue, setDiceValue] = useState<number | null>(null);
   const [isRolling, setIsRolling] = useState(false);
   const [winner, setWinner] = useState<PlayerColor | null>(null);
   const { toast } = useToast();
+
+  const activePlayerIds = useMemo(() => initialPlayers.map(p => p.id), [initialPlayers]);
 
   const movableTokens = useMemo(() => {
     if (!diceValue) return [];
@@ -61,7 +55,7 @@ export function LudoGame({ roomId }: { roomId: string }) {
     setDiceValue(value);
     setIsRolling(false);
     toast({
-      title: `You rolled a ${value}!`,
+      title: `${players.find(p => p.id === activePlayer)?.name} rolled a ${value}!`,
       description: value === 6 ? "You get an extra turn." : "Select a token to move.",
     });
     // If no moves are possible, automatically switch turn after a delay
@@ -100,9 +94,9 @@ export function LudoGame({ roomId }: { roomId: string }) {
   
     // Switch turn if not a 6
     if (diceValue !== 6) {
-      const currentPlayerIndex = initialPlayers.findIndex(p => p.id === activePlayer);
-      const nextPlayerIndex = (currentPlayerIndex + 1) % initialPlayers.length;
-      setActivePlayer(initialPlayers[nextPlayerIndex].id);
+      const currentPlayerIndex = activePlayerIds.indexOf(activePlayer);
+      const nextPlayerIndex = (currentPlayerIndex + 1) % activePlayerIds.length;
+      setActivePlayer(activePlayerIds[nextPlayerIndex]);
     }
   
     setDiceValue(null);
@@ -113,25 +107,16 @@ export function LudoGame({ roomId }: { roomId: string }) {
       <header className="flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-3">
           <Gamepad2 className="w-8 h-8 text-primary" />
-          <h1 className="text-2xl font-bold text-primary hidden sm:block">Ludo Lounge</h1>
+          <h1 className="text-2xl font-bold text-primary hidden sm:block">Ludo Game</h1>
         </div>
         <div className="text-center">
-            <h2 className="text-lg font-semibold">Room: {roomId}</h2>
-            <p className={cn("text-lg font-bold capitalize", 
-                activePlayer === 'red' && 'text-red-500',
-                activePlayer === 'green' && 'text-green-500',
-                activePlayer === 'yellow' && 'text-yellow-500',
-                activePlayer === 'blue' && 'text-blue-500',
-            )}>
-                {activePlayer}'s Turn
-            </p>
+            <h2 className="text-xl font-semibold capitalize">
+                {players.find(p => p.id === activePlayer)?.name}'s Turn
+            </h2>
         </div>
         <div className="flex items-center gap-2">
-            <Button variant="ghost" asChild>
-                <Link href="/lobby"><Home className="mr-2 h-4 w-4"/> Lobby</Link>
-            </Button>
-            <Button variant="destructive" asChild>
-                <Link href="/"><LogOut className="mr-2 h-4 w-4"/> Quit</Link>
+            <Button variant="outline" asChild>
+                <Link href="/"><RotateCcw className="mr-2 h-4 w-4"/> New Game</Link>
             </Button>
         </div>
       </header>
@@ -166,15 +151,15 @@ export function LudoGame({ roomId }: { roomId: string }) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="text-center text-3xl font-bold text-accent capitalize flex items-center justify-center gap-2">
-              <Crown className="w-8 h-8"/> {winner} Wins!
+              <Crown className="w-8 h-8"/> {players.find(p=>p.id === winner)?.name} Wins!
             </AlertDialogTitle>
             <AlertDialogDescription className="text-center">
-              Congratulations to {players.find(p=>p.id === winner)?.name}!
+              Congratulations! What a master of the dice.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <Button className="w-full" asChild>
-                <Link href="/lobby">Back to Lobby</Link>
+                <Link href="/">Play Again</Link>
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
