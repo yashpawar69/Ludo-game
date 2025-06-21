@@ -3,7 +3,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { LudoBoard } from './LudoBoard';
 import { PlayerCard } from './PlayerCard';
-import { Dice } from './Dice';
 import { Gamepad2, Crown, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -17,6 +16,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
 import { PATH_MAP, isSafeSquare, START_POS, HOME_PATH_START_POS, FINISHED_POS } from '@/lib/ludo-constants';
+import { cn } from '@/lib/utils';
 
 export type PlayerColor = 'red' | 'green' | 'yellow' | 'blue';
 export type Player = {
@@ -55,13 +55,10 @@ export function LudoGame({ roomId, initialPlayers }: { roomId: string, initialPl
     const playerTokens = player.tokens;
     
     playerTokens.forEach((pos, tokenIndex) => {
-        // Token is finished
         if (pos === FINISHED_POS) return;
 
-        // Token in base
         if (pos === -1) {
             if (roll === 6) {
-                // Check if start square is blocked by own token
                 const startPos = START_POS;
                 const startSquareIsBlocked = playerTokens.some(p => p === startPos);
                 if (!startSquareIsBlocked) {
@@ -71,19 +68,22 @@ export function LudoGame({ roomId, initialPlayers }: { roomId: string, initialPl
             return;
         }
 
-        // Token on home path
         if (pos > HOME_PATH_START_POS) {
             if (pos + roll <= FINISHED_POS) {
                 movable.push(tokenIndex);
             }
             return;
         }
-
-        // Token on main path
-        const newPos = pos + roll;
-        // Check if it can move without overshooting home path
-        if (newPos <= FINISHED_POS) {
-             movable.push(tokenIndex);
+        
+        const pathEntryPos = PATH_MAP[player.id].length - 1;
+        const currentPathPos = player.tokens.indexOf(pos);
+        if(currentPathPos + roll <= pathEntryPos){
+            movable.push(tokenIndex);
+        } else {
+             const homePathEntry = pos + roll - pathEntryPos;
+             if(HOME_PATH_START_POS + homePathEntry <= FINISHED_POS){
+                movable.push(tokenIndex)
+             }
         }
     });
 
@@ -106,13 +106,18 @@ export function LudoGame({ roomId, initialPlayers }: { roomId: string, initialPl
             if (value !== 6) {
                 switchToNextPlayer();
             } else {
-                setDiceValue(null); // Allow re-roll on 6 even with no moves
+                setDiceValue(null);
             }
         }, 1500);
+    } else if (movable.length === 1) {
+        // Automatically move if only one option
+        setTimeout(() => {
+           handleTokenMove(movable[0]);
+        }, 1000);
     }
-  }, [activePlayer, getMovableTokensForPlayer, switchToNextPlayer, toast]);
+  }, [activePlayer, getMovableTokensForPlayer, switchToNextPlayer, toast, handleTokenMove]);
 
-  const handleTokenMove = (tokenIndex: number) => {
+  const handleTokenMove = useCallback((tokenIndex: number) => {
     if (!diceValue || !movableTokens.includes(tokenIndex)) return;
 
     let grantExtraTurn = false;
@@ -123,27 +128,36 @@ export function LudoGame({ roomId, initialPlayers }: { roomId: string, initialPl
 
     let newPos: number;
 
-    if (currentPos === -1) { // Move from base
+    if (currentPos === -1) { 
         newPos = START_POS;
-    } else {
+    } else if (currentPos + diceValue > HOME_PATH_START_POS) {
         newPos = currentPos + diceValue;
+    } else {
+        const pathEntryPos = PATH_MAP[playerToMove.id].length - 1;
+        const currentPathPos = playerToMove.tokens.indexOf(currentPos);
+
+        if(currentPathPos + diceValue <= pathEntryPos){
+            newPos = currentPos + diceValue
+        } else {
+            const homePathEntry = currentPos + diceValue - pathEntryPos;
+            newPos = HOME_PATH_START_POS + homePathEntry;
+        }
     }
 
     playerToMove.tokens[tokenIndex] = newPos;
 
-    // Capture logic
     if (newPos <= HOME_PATH_START_POS) {
         const targetGridPos = PATH_MAP[playerToMove.id][newPos];
-        if (!isSafeSquare(targetGridPos)) {
+        if (targetGridPos && !isSafeSquare(targetGridPos)) {
             newPlayers.forEach(p => {
                 if (p.id !== playerToMove.id) {
-                    p.tokens = p.tokens.map((tokenPos, tIdx) => {
+                    p.tokens = p.tokens.map((tokenPos) => {
                         if (tokenPos > -1 && tokenPos <= HOME_PATH_START_POS) {
                             const opponentGridPos = PATH_MAP[p.id][tokenPos];
-                            if (opponentGridPos.row === targetGridPos.row && opponentGridPos.col === targetGridPos.col) {
+                            if (opponentGridPos && opponentGridPos.row === targetGridPos.row && opponentGridPos.col === targetGridPos.col) {
                                 toast({ title: "Capture!", description: `${playerToMove.name} captured ${p.name}'s token!` });
                                 grantExtraTurn = true;
-                                return -1; // Send back to base
+                                return -1;
                             }
                         }
                         return tokenPos;
@@ -153,11 +167,10 @@ export function LudoGame({ roomId, initialPlayers }: { roomId: string, initialPl
         }
     }
 
-    // Check for win
     if (playerToMove.tokens.every(p => p === FINISHED_POS)) {
         playerToMove.state = 'won';
         setWinner(playerToMove.id);
-        grantExtraTurn = false; // Game over
+        grantExtraTurn = false;
     } else if (newPos === FINISHED_POS) {
         grantExtraTurn = true;
         toast({ title: "Home Safe!", description: `${playerToMove.name} got a token home!` });
@@ -171,15 +184,23 @@ export function LudoGame({ roomId, initialPlayers }: { roomId: string, initialPl
     }
 
     if (grantExtraTurn && !winner) {
-        setDiceValue(null); // Allow re-roll
+        setDiceValue(null);
     } else if (!winner) {
         switchToNextPlayer();
     }
+  }, [diceValue, movableTokens, players, activePlayerId, toast, switchToNextPlayer]);
+
+  const getPlayerCardPosition = (index: number, totalPlayers: number) => {
+    const positions = ['top-4 left-4', 'top-4 right-4', 'bottom-4 right-4', 'bottom-4 left-4'];
+    if (totalPlayers === 2) {
+        return index === 0 ? positions[0] : positions[2];
+    }
+    return positions[index];
   };
   
   return (
-    <div className="flex flex-col h-screen w-screen bg-background text-foreground p-4 gap-4">
-      <header className="flex items-center justify-between flex-shrink-0">
+    <div className="flex flex-col h-screen w-screen bg-background text-foreground overflow-hidden">
+      <header className="flex items-center justify-between flex-shrink-0 p-4">
         <div className="flex items-center gap-3">
           <Gamepad2 className="w-8 h-8 text-primary" />
           <h1 className="text-2xl font-bold text-primary hidden sm:block">Ludo Game</h1>
@@ -196,30 +217,31 @@ export function LudoGame({ roomId, initialPlayers }: { roomId: string, initialPl
         </div>
       </header>
 
-      <div className="flex-1 flex flex-col lg:flex-row items-center justify-center gap-8 min-h-0">
-        <div className="w-full lg:w-auto lg:h-full flex items-center justify-center">
+      <main className="flex-1 relative">
+        {initialPlayers.map((p_config, index) => {
+            const player = players.find(p => p.id === p_config.id)!;
+            return (
+                 <div key={player.id} className={cn("absolute z-20 w-48 lg:w-56", getPlayerCardPosition(index, initialPlayers.length))}>
+                    <PlayerCard player={player} isActive={activePlayerId === player.id} />
+                </div>
+            )
+        })}
+       
+        <div className="absolute inset-0 flex items-center justify-center p-4">
              <LudoBoard
                 players={players}
                 activePlayer={activePlayerId}
                 movableTokens={movableTokens}
                 onTokenMove={handleTokenMove}
+                diceProps={{
+                    onRoll: handleDiceRoll,
+                    value: diceValue,
+                    activePlayerColor: activePlayerId,
+                    disabled: isRolling || !!winner || diceValue !== null
+                }}
             />
         </div>
-
-        <aside className="w-full lg:w-80 lg:h-full flex flex-col gap-4 flex-shrink-0">
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-1 gap-4">
-            {initialPlayers.map(p_config => players.find(p => p.id === p_config.id)!).map(player => (
-                <PlayerCard key={player.id} player={player} isActive={activePlayerId === player.id} />
-            ))}
-            </div>
-             <Dice
-                onRoll={handleDiceRoll}
-                value={diceValue}
-                activePlayerColor={activePlayerId}
-                disabled={isRolling || !!winner || diceValue !== null}
-            />
-        </aside>
-      </div>
+      </main>
 
        <AlertDialog open={!!winner}>
         <AlertDialogContent>

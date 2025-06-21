@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
 import { Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, RotateCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PLAYER_COLORS } from '@/lib/ludo-constants';
@@ -55,30 +54,26 @@ export function Dice({ onRoll, value, activePlayerColor, disabled }: DiceProps) 
     const currentDisplayValue = isRolling ? displayValue : value;
 
     return (
-        <div className="flex flex-col items-center justify-center gap-4 p-4 bg-card rounded-lg shadow-md">
-            <motion.div
-                className="w-24 h-24 p-2 rounded-lg text-foreground"
-                animate={{
-                    rotate: isRolling ? 360 : 0,
-                    scale: isRolling ? 1.1 : 1,
-                }}
-                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-            >
-                {currentDisplayValue ? diceIcons[currentDisplayValue - 1] : <div className="w-full h-full border-2 border-dashed rounded-md flex items-center justify-center text-muted-foreground">?</div>}
-            </motion.div>
-            <Button
-                onClick={handleRoll}
-                disabled={disabled || isRolling}
-                className={cn(
-                    "w-full text-lg font-bold",
-                    !disabled && PLAYER_COLORS[activePlayerColor].bg,
-                    !disabled && `hover:${PLAYER_COLORS[activePlayerColor].darkBg}`,
-                    "text-primary-foreground"
-                )}
-            >
-                {isRolling ? <RotateCw className="mr-2 h-5 w-5 animate-spin" /> : null}
-                {isRolling ? 'Rolling...' : 'Roll Dice'}
-            </Button>
-        </div>
+        <motion.div
+            onClick={handleRoll}
+            className={cn(
+                "relative w-20 h-20 p-2 rounded-lg text-white flex items-center justify-center shadow-lg",
+                "transition-colors duration-300",
+                !disabled && PLAYER_COLORS[activePlayerColor].bg,
+                !disabled && `hover:${PLAYER_COLORS[activePlayerColor].darkBg}`,
+                !disabled && "cursor-pointer",
+                disabled && "bg-muted-foreground/20 cursor-not-allowed"
+            )}
+            animate={{
+                rotate: isRolling ? 360 : 0,
+                scale: isRolling ? 1.1 : 1,
+            }}
+            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+        >
+             {isRolling && <div className="absolute inset-0 bg-black/30 flex items-center justify-center rounded-lg"><RotateCw className="w-8 h-8 animate-spin" /></div>}
+            <div className="w-16 h-16">
+                 {currentDisplayValue ? diceIcons[currentDisplayValue - 1] : <div className="w-full h-full border-2 border-dashed rounded-md flex items-center justify-center text-white/50">?</div>}
+            </div>
+        </motion.div>
     );
 }

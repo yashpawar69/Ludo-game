@@ -1,10 +1,10 @@
 type PlayerColor = 'red' | 'green' | 'yellow' | 'blue';
 
 export const PLAYER_COLORS: Record<PlayerColor, { name: string, bg: string, lightBg: string, darkBg: string, border: string }> = {
-  red:    { name: 'Red',    bg: 'bg-red-600',    lightBg: 'bg-red-400',    darkBg: 'bg-red-700',    border: 'border-red-800' },
-  green:  { name: 'Green',  bg: 'bg-green-600',  lightBg: 'bg-green-400',  darkBg: 'bg-green-700',  border: 'border-green-800' },
-  yellow: { name: 'Yellow', bg: 'bg-yellow-500', lightBg: 'bg-yellow-300', darkBg: 'bg-yellow-600', border: 'border-yellow-700' },
-  blue:   { name: 'Blue',   bg: 'bg-blue-600',   lightBg: 'bg-blue-400',   darkBg: 'bg-blue-700',   border: 'border-blue-800' },
+  red:    { name: 'Red',    bg: 'bg-red-500',    lightBg: 'bg-red-400',    darkBg: 'bg-red-700',    border: 'border-red-700' },
+  green:  { name: 'Green',  bg: 'bg-green-500',  lightBg: 'bg-green-400',  darkBg: 'bg-green-700',  border: 'border-green-700' },
+  yellow: { name: 'Yellow', bg: 'bg-yellow-400', lightBg: 'bg-yellow-300', darkBg: 'bg-yellow-600', border: 'border-yellow-600' },
+  blue:   { name: 'Blue',   bg: 'bg-blue-500',   lightBg: 'bg-blue-400',   darkBg: 'bg-blue-700',   border: 'border-blue-700' },
 };
 
 export type GridPos = { row: number; col: number };
@@ -50,17 +50,18 @@ const HOME_PATHS: Record<PlayerColor, GridPos[]> = {
 };
 
 const SAFE_SQUARES_GRID: GridPos[] = [
-    ABSOLUTE_PATH[0],  // Red start
+    ABSOLUTE_PATH[0],
     ABSOLUTE_PATH[8],
-    ABSOLUTE_PATH[13], // Green start
+    ABSOLUTE_PATH[13],
     ABSOLUTE_PATH[21],
-    ABSOLUTE_PATH[26], // Yellow start
+    ABSOLUTE_PATH[26],
     ABSOLUTE_PATH[34],
-    ABSOLUTE_PATH[39], // Blue start
+    ABSOLUTE_PATH[39],
     ABSOLUTE_PATH[47],
 ];
 
 export function isSafeSquare(gridPos: GridPos): boolean {
+    if (!gridPos) return false;
     return !!SAFE_SQUARES_GRID.find(p => p.row === gridPos.row && p.col === gridPos.col);
 }
 
@@ -72,7 +73,7 @@ export const BOARD_LAYOUT: Cell[] = [
   { id: 'yellow-base', type: 'base', color: 'yellow', row: 10, col: 10,span: { row: 6, col: 6 }, itemPositions: [{row: 12, col: 12}, {row: 12, col: 13}, {row: 13, col: 12}, {row: 13, col: 13}] },
   
   // Home Finish
-  { id: 'home-finish', type: 'home-finish', row: 7, col: 7, span: { row: 3, col: 3 }, itemPositions: [{row:7, col: 7}, {row:9, col: 7}, {row:7, col: 9}, {row:9, col: 9}]},
+  { id: 'home-finish', type: 'home-finish', row: 7, col: 7, span: { row: 3, col: 3 }},
 ];
 
 // Add path cells to layout

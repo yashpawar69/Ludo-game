@@ -1,46 +1,53 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { User, Home, Crown } from 'lucide-react';
+import { User, Crown } from 'lucide-react';
 import { PLAYER_COLORS, FINISHED_POS } from '@/lib/ludo-constants';
-
-type PlayerColor = 'red' | 'green' | 'yellow' | 'blue';
-type Player = {
-  id: PlayerColor;
-  name: string;
-  tokens: number[];
-  state: 'waiting' | 'playing' | 'won';
-};
+import type { PlayerColor, Player } from './LudoGame';
 
 interface PlayerCardProps {
   player: Player;
   isActive: boolean;
 }
 
+const getTokenStatus = (pos: number) => {
+    if (pos === -1) return "In Base";
+    if (pos === FINISHED_POS) return "Finished";
+    return "On Board";
+}
+
 export function PlayerCard({ player, isActive }: PlayerCardProps) {
-  const tokensInBase = player.tokens.filter(p => p === -1).length;
-  const tokensFinished = player.tokens.filter(p => p === FINISHED_POS).length;
 
   return (
-    <Card className={cn('transition-all duration-300', isActive ? 'shadow-lg ring-2 ring-accent' : 'shadow-md')}>
-      <CardHeader className={cn("p-3 rounded-t-lg", PLAYER_COLORS[player.id].bg)}>
-        <CardTitle className="flex items-center gap-2 text-primary-foreground text-base">
-          <User className="w-5 h-5" />
-          <span className="truncate">{player.name}</span>
-          {player.state === 'won' && <Crown className="w-5 h-5 text-accent" />}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-3 text-sm flex justify-around">
-        <div className="flex items-center gap-1" title="Tokens in base">
-          <Home className="w-4 h-4 text-muted-foreground" />
-          <span>{tokensInBase}</span>
+    <div className={cn(
+        'p-2 rounded-lg shadow-lg border-2 transition-all duration-300',
+        PLAYER_COLORS[player.id].bg,
+        isActive ? `ring-4 ring-offset-2 ring-accent ring-offset-background` : PLAYER_COLORS[player.id].border
+    )}>
+        <div className="flex items-center gap-3">
+            <div className="flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-white/30 flex items-center justify-center border-2 border-white/50">
+                    <User className="w-6 h-6 text-white" />
+                </div>
+            </div>
+            <div className="flex-1 min-w-0">
+                <p className="text-lg font-bold text-white truncate">{player.name}</p>
+                <div className="flex items-center gap-1.5 mt-1">
+                    {player.tokens.map((pos, i) => (
+                        <div key={i} 
+                             className={cn(
+                                "w-5 h-5 rounded-full border-2 border-white/50 flex items-center justify-center",
+                                pos === -1 ? 'bg-black/20' : ''
+                             )}
+                             title={`Token ${i+1} status: ${getTokenStatus(pos)}`}>
+                            {pos === FINISHED_POS && <Crown className="w-3 h-3 text-white" />}
+                            {pos > -1 && pos < FINISHED_POS && <div className={cn("w-2.5 h-2.5 rounded-full", PLAYER_COLORS[player.id].darkBg)}/>}
+                        </div>
+                    ))}
+                </div>
+            </div>
+             {player.state === 'won' && <Crown className="w-6 h-6 text-yellow-400 flex-shrink-0 animate-pulse" />}
         </div>
-        <div className="flex items-center gap-1" title="Tokens finished">
-          <Crown className="w-4 h-4 text-muted-foreground" />
-          <span>{tokensFinished}</span>
-        </div>
-      </CardContent>
-    </Card>
+    </div>
   );
 }
