@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Star, ArrowUp, ArrowRight, ArrowDown, ArrowLeft } from 'lucide-react';
-import { BOARD_LAYOUT, PATH_MAP, HOME_PATH_START_POS, FINISHED_POS } from '@/lib/ludo-constants';
+import { BOARD_LAYOUT, PATH_MAP, HOME_PATH_START_POS, FINISHED_POS, START_INDICES } from '@/lib/ludo-constants';
 import type { PlayerColor, Player } from './LudoGame';
 import { Dice } from './Dice';
 
@@ -92,10 +92,10 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove, d
 
     return (
         <>
-            <ArrowUp style={{gridRow: redStart.row, gridColumn: redStart.col}} className={cn(arrowBaseClass, "text-red-500")} />
-            <ArrowRight style={{gridRow: greenStart.row, gridColumn: greenStart.col}} className={cn(arrowBaseClass, "text-green-500")} />
-            <ArrowDown style={{gridRow: yellowStart.row, gridColumn: yellowStart.col}} className={cn(arrowBaseClass, "text-yellow-400")} />
-            <ArrowLeft style={{gridRow: blueStart.row, gridColumn: blueStart.col}} className={cn(arrowBaseClass, "text-blue-500")} />
+            <ArrowUp style={{gridRow: redStart.row, gridColumn: redStart.col}} className={cn(arrowBaseClass, "text-white")} />
+            <ArrowRight style={{gridRow: greenStart.row, gridColumn: greenStart.col}} className={cn(arrowBaseClass, "text-white")} />
+            <ArrowDown style={{gridRow: yellowStart.row, gridColumn: yellowStart.col}} className={cn(arrowBaseClass, "text-black")} />
+            <ArrowLeft style={{gridRow: blueStart.row, gridColumn: blueStart.col}} className={cn(arrowBaseClass, "text-white")} />
         </>
     )
   }
@@ -140,17 +140,24 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove, d
           }
           
           if (type === 'path' || type === 'home-path') {
-            const starColor = type === 'path' ? 'text-gray-300' : 'text-white/50';
+            const starColor = type === 'path' ? 'text-gray-400' : 'text-white/50';
+            const isRedStart = id === `path-main-${START_INDICES.red}`;
+            const isGreenStart = id === `path-main-${START_INDICES.green}`;
+            const isYellowStart = id === `path-main-${START_INDICES.yellow}`;
+            const isBlueStart = id === `path-main-${START_INDICES.blue}`;
+            const isStart = isRedStart || isGreenStart || isYellowStart || isBlueStart;
+            
             return (
               <div key={id} style={style} className={cn('rounded-sm flex items-center justify-center', 
-                type === 'path' ? 'bg-white' : {
-                    'bg-red-400': color === 'red',
-                    'bg-green-400': color === 'green',
-                    'bg-yellow-300': color === 'yellow',
-                    'bg-blue-400': color === 'blue',
+                {
+                  'bg-white': type === 'path' && !isStart,
+                  'bg-red-400': (type === 'home-path' && color === 'red') || isRedStart,
+                  'bg-green-400': (type === 'home-path' && color === 'green') || isGreenStart,
+                  'bg-yellow-300': (type === 'home-path' && color === 'yellow') || isYellowStart,
+                  'bg-blue-400': (type === 'home-path' && color === 'blue') || isBlueStart,
                 }
               )}>
-                {isSafe && <Star className={cn("w-3/4 h-3/4", starColor)} />}
+                {isSafe && <Star className={cn("w-3/4 h-3/4", isStart ? 'text-white/80' : starColor)} />}
               </div>
             );
           }
