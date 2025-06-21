@@ -77,11 +77,22 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove }:
           const { type, color, id, row, col, span, isSafe } = cell;
           const style = { gridRow: `${row} / span ${span?.row || 1}`, gridColumn: `${col} / span ${span?.col || 1}` };
           
-          if (type === 'base' || type === 'home-finish') {
+          if (type === 'base') {
             return (
               <div key={id} style={style} className={cn('rounded-lg', PLAYER_COLORS[color!].bg, 'flex items-center justify-center p-2')}>
-                  {type === 'base' && <Home className="w-1/2 h-1/2 text-white/50" />}
-                  {type === 'home-finish' && <div className={cn("w-full h-full flex items-center justify-center", PLAYER_COLORS[color!].darkBg)}> <Crown className="w-1/2 h-1/2 text-accent" /> </div>}
+                  <Home className="w-1/2 h-1/2 text-white/50" />
+              </div>
+            );
+          }
+
+          if (type === 'home-finish') {
+            return (
+              <div key={id} style={style} className={cn('flex items-center justify-center relative')}>
+                 <div className={cn("absolute inset-0", PLAYER_COLORS['red'].bg)} style={{clipPath: 'polygon(0 0, 50% 50%, 0 100%)'}}></div>
+                 <div className={cn("absolute inset-0", PLAYER_COLORS['green'].bg)} style={{clipPath: 'polygon(0 0, 100% 0, 50% 50%)'}}></div>
+                 <div className={cn("absolute inset-0", PLAYER_COLORS['yellow'].bg)} style={{clipPath: 'polygon(100% 0, 50% 50%, 100% 100%)'}}></div>
+                 <div className={cn("absolute inset-0", PLAYER_COLORS['blue'].bg)} style={{clipPath: 'polygon(0 100%, 100% 100%, 50% 50%)'}}></div>
+                 <Crown className="w-1/2 h-1/2 text-accent relative z-10" />
               </div>
             );
           }

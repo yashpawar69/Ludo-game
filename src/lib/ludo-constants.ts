@@ -27,7 +27,7 @@ export const BOARD_LAYOUT: Cell[] = [
   { id: 'yellow-base', type: 'base', color: 'yellow', row: 10, col: 10,span: { row: 6, col: 6 }, itemPositions: [{row: 11, col: 11}, {row: 11, col: 14}, {row: 14, col: 11}, {row: 14, col: 14}] },
   
   // Home Finish
-  { id: 'home-finish', type: 'home-finish', row: 7, col: 7, span: { row: 3, col: 3 }, color: 'red' },
+  { id: 'home-finish', type: 'home-finish', row: 7, col: 7, span: { row: 3, col: 3 } },
 ];
 
 const pathCells: {type: 'path' | 'home-path', row: number, col: number, color?: PlayerColor, isSafe?: boolean}[] = [
