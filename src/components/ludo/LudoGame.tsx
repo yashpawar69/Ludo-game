@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { LudoBoard } from './LudoBoard';
 import { PlayerCard } from './PlayerCard';
 import { Dice } from './Dice';
@@ -16,90 +16,165 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
+import { PATH_MAP, isSafeSquare, START_POS, HOME_PATH_START_POS, FINISHED_POS } from '@/lib/ludo-constants';
 
 export type PlayerColor = 'red' | 'green' | 'yellow' | 'blue';
 export type Player = {
   id: PlayerColor;
   name: string;
-  tokens: number[]; // -1: base, 0-51: main path, 101-105: home path, 106: finished
+  tokens: number[]; // -1: base, 0-50: main path, 51-55: home path, 56: finished
   state: 'waiting' | 'playing' | 'won';
+};
+
+const getNextPlayerId = (currentId: PlayerColor, playerIds: PlayerColor[]): PlayerColor => {
+    const currentIndex = playerIds.indexOf(currentId);
+    const nextIndex = (currentIndex + 1) % playerIds.length;
+    return playerIds[nextIndex];
 };
 
 export function LudoGame({ roomId, initialPlayers }: { roomId: string, initialPlayers: Player[] }) {
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
-  const [activePlayer, setActivePlayer] = useState<PlayerColor>(initialPlayers[0]?.id || 'red');
+  const [activePlayerId, setActivePlayerId] = useState<PlayerColor>(initialPlayers[0]?.id || 'red');
   const [diceValue, setDiceValue] = useState<number | null>(null);
-  const [isRolling, setIsRolling] = useState(false);
+  const [movableTokens, setMovableTokens] = useState<number[]>([]);
   const [winner, setWinner] = useState<PlayerColor | null>(null);
+  const [isRolling, setIsRolling] = useState(false);
   const { toast } = useToast();
 
   const activePlayerIds = useMemo(() => initialPlayers.map(p => p.id), [initialPlayers]);
+  const activePlayer = useMemo(() => players.find(p => p.id === activePlayerId)!, [players, activePlayerId]);
 
-  const movableTokens = useMemo(() => {
-    if (!diceValue) return [];
-    // Simplified logic: for now, any token can move.
-    // A real implementation would check for valid moves.
-    const player = players.find(p => p.id === activePlayer);
-    if (!player) return [];
+  const switchToNextPlayer = useCallback(() => {
+    setDiceValue(null);
+    setMovableTokens([]);
+    setActivePlayerId(getNextPlayerId(activePlayerId, activePlayerIds));
+  }, [activePlayerId, activePlayerIds]);
 
-    return player.tokens.map((pos, index) => {
-      if (pos === -1 && diceValue !== 6) return -1;
-      if (pos === 106) return -1; // Cannot move finished tokens
-      return index;
-    }).filter(i => i !== -1);
-  }, [diceValue, activePlayer, players]);
+  const getMovableTokensForPlayer = useCallback((player: Player, roll: number): number[] => {
+    const movable: number[] = [];
+    const playerTokens = player.tokens;
+    
+    playerTokens.forEach((pos, tokenIndex) => {
+        // Token is finished
+        if (pos === FINISHED_POS) return;
 
-  const handleDiceRoll = (value: number) => {
-    setDiceValue(value);
-    setIsRolling(false);
-    toast({
-      title: `${players.find(p => p.id === activePlayer)?.name} rolled a ${value}!`,
-      description: value === 6 ? "You get an extra turn." : "Select a token to move.",
+        // Token in base
+        if (pos === -1) {
+            if (roll === 6) {
+                // Check if start square is blocked by own token
+                const startPos = START_POS;
+                const startSquareIsBlocked = playerTokens.some(p => p === startPos);
+                if (!startSquareIsBlocked) {
+                    movable.push(tokenIndex);
+                }
+            }
+            return;
+        }
+
+        // Token on home path
+        if (pos > HOME_PATH_START_POS) {
+            if (pos + roll <= FINISHED_POS) {
+                movable.push(tokenIndex);
+            }
+            return;
+        }
+
+        // Token on main path
+        const newPos = pos + roll;
+        // Check if it can move without overshooting home path
+        if (newPos <= FINISHED_POS) {
+             movable.push(tokenIndex);
+        }
     });
-    // If no moves are possible, automatically switch turn after a delay
-  };
+
+    return movable;
+  }, []);
+
+  const handleDiceRoll = useCallback((value: number) => {
+    setDiceValue(value);
+    
+    const movable = getMovableTokensForPlayer(activePlayer, value);
+    setMovableTokens(movable);
+
+    toast({
+        title: `${activePlayer.name} rolled a ${value}!`,
+        description: movable.length > 0 ? "Select a token to move." : "No available moves.",
+    });
+
+    if (movable.length === 0) {
+        setTimeout(() => {
+            if (value !== 6) {
+                switchToNextPlayer();
+            } else {
+                setDiceValue(null); // Allow re-roll on 6 even with no moves
+            }
+        }, 1500);
+    }
+  }, [activePlayer, getMovableTokensForPlayer, switchToNextPlayer, toast]);
 
   const handleTokenMove = (tokenIndex: number) => {
     if (!diceValue || !movableTokens.includes(tokenIndex)) return;
-  
-    setPlayers(prevPlayers => {
-      const newPlayers = [...prevPlayers];
-      const playerIndex = newPlayers.findIndex(p => p.id === activePlayer);
-      const player = newPlayers[playerIndex];
-      const currentPos = player.tokens[tokenIndex];
-  
-      // Simplified move logic
-      if (currentPos === -1 && diceValue === 6) {
-        player.tokens[tokenIndex] = 0; // Starting position (will be mapped to player's start)
-      } else if (currentPos !== -1) {
-        let newPos = currentPos + diceValue;
-        // Simple win condition
-        if (newPos > 51) {
-          player.tokens[tokenIndex] = 106; // Finished
-        } else {
-          player.tokens[tokenIndex] = newPos;
-        }
-      }
-  
-      // Check for win
-      if (player.tokens.every(p => p === 106)) {
-        player.state = 'won';
-        setWinner(player.id);
-      }
-  
-      return newPlayers;
-    });
-  
-    // Switch turn if not a 6
-    if (diceValue !== 6) {
-      const currentPlayerIndex = activePlayerIds.indexOf(activePlayer);
-      const nextPlayerIndex = (currentPlayerIndex + 1) % activePlayerIds.length;
-      setActivePlayer(activePlayerIds[nextPlayerIndex]);
+
+    let grantExtraTurn = false;
+    
+    const newPlayers = JSON.parse(JSON.stringify(players)) as Player[];
+    const playerToMove = newPlayers.find(p => p.id === activePlayerId)!;
+    const currentPos = playerToMove.tokens[tokenIndex];
+
+    let newPos: number;
+
+    if (currentPos === -1) { // Move from base
+        newPos = START_POS;
+    } else {
+        newPos = currentPos + diceValue;
     }
-  
-    setDiceValue(null);
+
+    playerToMove.tokens[tokenIndex] = newPos;
+
+    // Capture logic
+    if (newPos <= HOME_PATH_START_POS) {
+        const targetGridPos = PATH_MAP[playerToMove.id][newPos];
+        if (!isSafeSquare(targetGridPos)) {
+            newPlayers.forEach(p => {
+                if (p.id !== playerToMove.id) {
+                    p.tokens = p.tokens.map((tokenPos, tIdx) => {
+                        if (tokenPos > -1 && tokenPos <= HOME_PATH_START_POS) {
+                            const opponentGridPos = PATH_MAP[p.id][tokenPos];
+                            if (opponentGridPos.row === targetGridPos.row && opponentGridPos.col === targetGridPos.col) {
+                                toast({ title: "Capture!", description: `${playerToMove.name} captured ${p.name}'s token!` });
+                                grantExtraTurn = true;
+                                return -1; // Send back to base
+                            }
+                        }
+                        return tokenPos;
+                    });
+                }
+            });
+        }
+    }
+
+    // Check for win
+    if (playerToMove.tokens.every(p => p === FINISHED_POS)) {
+        playerToMove.state = 'won';
+        setWinner(playerToMove.id);
+        grantExtraTurn = false; // Game over
+    } else if (newPos === FINISHED_POS) {
+        grantExtraTurn = true;
+        toast({ title: "Home Safe!", description: `${playerToMove.name} got a token home!` });
+    }
+
+    setPlayers(newPlayers);
+    setMovableTokens([]);
+
+    if (diceValue === 6) {
+        grantExtraTurn = true;
+    }
+
+    if (grantExtraTurn && !winner) {
+        setDiceValue(null); // Allow re-roll
+    } else if (!winner) {
+        switchToNextPlayer();
+    }
   };
   
   return (
@@ -111,7 +186,7 @@ export function LudoGame({ roomId, initialPlayers }: { roomId: string, initialPl
         </div>
         <div className="text-center">
             <h2 className="text-xl font-semibold capitalize">
-                {players.find(p => p.id === activePlayer)?.name}'s Turn
+                {activePlayer.name}'s Turn
             </h2>
         </div>
         <div className="flex items-center gap-2">
@@ -125,7 +200,7 @@ export function LudoGame({ roomId, initialPlayers }: { roomId: string, initialPl
         <div className="w-full lg:w-auto lg:h-full flex items-center justify-center">
              <LudoBoard
                 players={players}
-                activePlayer={activePlayer}
+                activePlayer={activePlayerId}
                 movableTokens={movableTokens}
                 onTokenMove={handleTokenMove}
             />
@@ -133,15 +208,14 @@ export function LudoGame({ roomId, initialPlayers }: { roomId: string, initialPl
 
         <aside className="w-full lg:w-80 lg:h-full flex flex-col gap-4 flex-shrink-0">
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-1 gap-4">
-            {players.map(player => (
-                <PlayerCard key={player.id} player={player} isActive={activePlayer === player.id} />
+            {initialPlayers.map(p_config => players.find(p => p.id === p_config.id)!).map(player => (
+                <PlayerCard key={player.id} player={player} isActive={activePlayerId === player.id} />
             ))}
             </div>
              <Dice
-                isRolling={isRolling}
                 onRoll={handleDiceRoll}
                 value={diceValue}
-                activePlayerColor={activePlayer}
+                activePlayerColor={activePlayerId}
                 disabled={isRolling || !!winner || diceValue !== null}
             />
         </aside>

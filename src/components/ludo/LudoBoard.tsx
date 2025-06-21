@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Home, Star, Crown } from 'lucide-react';
-import { PLAYER_COLORS, BOARD_LAYOUT, PATH_MAP } from '@/lib/ludo-constants';
+import { PLAYER_COLORS, BOARD_LAYOUT, PATH_MAP, HOME_PATH_START_POS, FINISHED_POS } from '@/lib/ludo-constants';
 
 type PlayerColor = 'red' | 'green' | 'yellow' | 'blue';
 type Player = {
@@ -31,17 +31,21 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove }:
           const baseInfo = BOARD_LAYOUT.find(c => c.type === 'base' && c.color === player.id);
           if (!baseInfo || !baseInfo.itemPositions) return null;
           gridPos = baseInfo.itemPositions[tokenIndex];
-        } else if (pos >= 101 && pos <= 106) { // Home path
-          const homePathId = `${player.id}-h${pos - 100}`;
-          const cell = BOARD_LAYOUT.find(c => c.id === homePathId);
-          if (!cell) return null;
-          gridPos = { row: cell.row, col: cell.col };
-        } else if (pos >= 0 && pos <= 51) { // Main path
+        } else if (pos === FINISHED_POS) { // Finished - place in the center
+            const homeInfo = BOARD_LAYOUT.find(c => c.type === 'home-finish');
+            if (!homeInfo || !homeInfo.itemPositions) return null;
+            const playerIndex = players.findIndex(p => p.id === player.id);
+            gridPos = homeInfo.itemPositions[playerIndex];
+        } else if (pos > HOME_PATH_START_POS) { // Home path
+            const homePathIndex = pos - HOME_PATH_START_POS; // 1-5
+            const homePathId = `${player.id}-h${homePathIndex}`;
+            const cell = BOARD_LAYOUT.find(c => c.id === homePathId);
+            if (!cell) return null;
+            gridPos = { row: cell.row, col: cell.col };
+        } else { // Main path
             const pathCell = PATH_MAP[player.id][pos];
             if (!pathCell) return null;
             gridPos = {row: pathCell.row, col: pathCell.col};
-        } else { // Finished
-          return null;
         }
 
         const isMovable = activePlayer === player.id && movableTokens.includes(tokenIndex);
@@ -51,16 +55,20 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove }:
             key={tokenId}
             layoutId={tokenId}
             initial={false}
-            animate={{ gridRow: gridPos.row, gridColumn: gridPos.col }}
-            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+            animate={{ 
+                gridRowStart: gridPos.row, 
+                gridColumnStart: gridPos.col,
+                zIndex: isMovable ? 30 : 20,
+            }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             className={cn(
-                "flex items-center justify-center rounded-full h-8 w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 z-20 border-2 shadow-lg",
+                "flex items-center justify-center rounded-full h-8 w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 border-2 shadow-lg",
                 PLAYER_COLORS[player.id].bg,
                 PLAYER_COLORS[player.id].border,
-                isMovable && "cursor-pointer ring-4 ring-accent ring-offset-2",
+                isMovable && "cursor-pointer ring-4 ring-accent ring-offset-background",
                 isMovable && "animate-bounce"
             )}
-            onClick={() => onTokenMove(tokenIndex)}
+            onClick={() => isMovable && onTokenMove(tokenIndex)}
             style={{ gridRow: gridPos.row, gridColumn: gridPos.col }}
           >
              <div className="h-4 w-4 md:h-5 md:w-5 rounded-full bg-white/50"></div>
@@ -98,7 +106,7 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove }:
           }
           
           if (type === 'path' || type === 'home-path') {
-            const pathColor = type === 'path' ? 'bg-white' : PLAYER_COLORS[color!].lightBg;
+            const pathColor = type === 'path' ? 'bg-card' : PLAYER_COLORS[color!].lightBg;
             return (
               <div key={id} style={style} className={cn('rounded-sm', pathColor, 'flex items-center justify-center')}>
                 {isSafe && <Star className="w-3/4 h-3/4 text-muted-foreground/30" />}
