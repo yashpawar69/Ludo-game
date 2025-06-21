@@ -144,24 +144,30 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove, d
           }
           
           if (type === 'path' || type === 'home-path') {
-            const starColor = type === 'path' ? 'text-gray-400' : 'text-white/50';
             const isRedStart = id === `path-main-${START_INDICES.red}`;
             const isGreenStart = id === `path-main-${START_INDICES.green}`;
             const isYellowStart = id === `path-main-${START_INDICES.yellow}`;
             const isBlueStart = id === `path-main-${START_INDICES.blue}`;
             const isStart = isRedStart || isGreenStart || isYellowStart || isBlueStart;
             
+            const isWhiteBox = type === 'path' && !isStart;
+            
             return (
               <div key={id} style={style} className={cn('rounded-sm flex items-center justify-center', 
                 {
-                  'bg-white': type === 'path' && !isStart,
+                  'bg-white': isWhiteBox,
                   'bg-red-400': (type === 'home-path' && color === 'red') || isRedStart,
                   'bg-green-400': (type === 'home-path' && color === 'green') || isGreenStart,
                   'bg-yellow-300': (type === 'home-path' && color === 'yellow') || isYellowStart,
                   'bg-blue-400': (type === 'home-path' && color === 'blue') || isBlueStart,
                 }
               )}>
-                {isSafe && <Star className={cn("w-3/4 h-3/4", isStart ? 'text-white/80' : starColor)} />}
+                {isSafe && !isWhiteBox && <Star className={cn("w-3/4 h-3/4", isStart ? 'text-white/80' : 'text-white/50')} />}
+                {isWhiteBox && (
+                    <span className="text-black text-xs font-semibold">
+                        {parseInt(id.split('-')[2]) + 1}
+                    </span>
+                )}
               </div>
             );
           }
