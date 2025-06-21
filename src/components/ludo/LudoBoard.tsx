@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Home, Star } from 'lucide-react';
+import { Home, Star, Crown } from 'lucide-react';
 import { PLAYER_COLORS, BOARD_LAYOUT, PATH_MAP } from '@/lib/ludo-constants';
 
 type PlayerColor = 'red' | 'green' | 'yellow' | 'blue';
