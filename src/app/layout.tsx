@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'Ludo Lounge',
-  description: 'A multiplayer Ludo game for 2-4 players.',
+  title: 'Ludo Game',
+  description: 'A local multiplayer Ludo game for 2-4 players.',
 };
 
 export default function RootLayout({

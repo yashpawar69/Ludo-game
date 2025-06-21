@@ -1,64 +1,136 @@
 "use client";
+
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Gamepad2 } from 'lucide-react';
-import Link from 'next/link';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Gamepad2, Users } from 'lucide-react';
+import { PLAYER_COLORS } from '@/lib/ludo-constants';
+import type { PlayerColor } from '@/components/ludo/LudoGame';
 
-export default function LoginPage() {
-  const router = useRouter();
+const ALL_COLORS = Object.keys(PLAYER_COLORS) as PlayerColor[];
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    router.push('/lobby');
-  };
+type PlayerConfig = {
+    name: string;
+    color: PlayerColor;
+};
 
-  return (
-    <main className="flex items-center justify-center min-h-screen bg-background p-4">
-      <Card className="w-full max-w-md shadow-2xl">
-        <CardHeader className="text-center">
-          <div className="flex justify-center items-center mb-4">
-            <Gamepad2 className="w-12 h-12 text-primary" />
-          </div>
-          <CardTitle className="text-3xl font-bold text-primary">Ludo Lounge</CardTitle>
-          <CardDescription>Log in to roll the dice!</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="you@example.com" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" required />
-            </div>
-            <Button type="submit" className="w-full">Login</Button>
-          </form>
-          <div className="mt-4 text-center text-sm">
-            Don't have an account?{" "}
-            <Link href="/register" className="underline text-primary">
-              Sign up
-            </Link>
-          </div>
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">
-                Or continue with
-              </span>
-            </div>
-          </div>
-          <Button variant="outline" className="w-full">
-             <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 126 23.4 172.9 61.9l-76.2 74.3C309 107 281.4 96 248 96c-88.8 0-160.1 71.1-160.1 160.1S159.2 416.2 248 416.2c37.6 0 71.7-11.8 98.6-31.4l74.9 69.1c-43.2 39.2-99.7 62.2-161.5 62.2C110.8 512 0 401.2 0 265.2S110.8 18 248 18c130.6 0 231.2 96.7 231.2 228.6 0 14.3-.4 28.3-1.2 42.4H248v-94.8h139.6c5.8 32.3 8.3 65.8 8.3 99.8z"></path></svg>
-            Login with Google
-          </Button>
-        </CardContent>
-      </Card>
-    </main>
-  );
+export default function SetupPage() {
+    const router = useRouter();
+    const [numPlayers, setNumPlayers] = useState<number>(2);
+    const [players, setPlayers] = useState<PlayerConfig[]>([
+        { name: 'Player 1', color: 'red' },
+        { name: 'Player 2', color: 'blue' },
+        { name: 'Player 3', color: 'green' },
+        { name: 'Player 4', color: 'yellow' },
+    ]);
+
+    const handlePlayerCountChange = (value: string) => {
+        setNumPlayers(parseInt(value, 10));
+    };
+
+    const handlePlayerChange = (index: number, field: keyof PlayerConfig, value: string) => {
+        const newPlayers = [...players];
+        newPlayers[index] = { ...newPlayers[index], [field]: value };
+        setPlayers(newPlayers);
+    };
+
+    const availableColors = (currentIndex: number) => {
+        const selectedColors = players
+            .slice(0, numPlayers)
+            .map((p, i) => i !== currentIndex ? p.color : null)
+            .filter(Boolean);
+        return ALL_COLORS.filter(c => !selectedColors.includes(c));
+    };
+
+    const handleStartGame = () => {
+        const gamePlayers = players.slice(0, numPlayers).map(p => ({
+            id: p.color,
+            name: p.name,
+            tokens: [-1, -1, -1, -1],
+            state: 'playing' as const
+        }));
+
+        const colors = gamePlayers.map(p => p.id);
+        if (new Set(colors).size !== colors.length) {
+            alert("Each player must have a unique color.");
+            return;
+        }
+
+        const query = encodeURIComponent(JSON.stringify(gamePlayers));
+        router.push(`/game/offline-${Date.now()}?players=${query}`);
+    };
+
+    return (
+        <main className="flex items-center justify-center min-h-screen bg-background p-4">
+            <Card className="w-full max-w-lg shadow-2xl">
+                <CardHeader className="text-center">
+                    <div className="flex justify-center items-center mb-4">
+                        <Gamepad2 className="w-12 h-12 text-primary" />
+                    </div>
+                    <CardTitle className="text-3xl font-bold text-primary">Ludo Game Setup</CardTitle>
+                    <CardDescription>Configure your offline game.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="space-y-2">
+                        <Label>Number of Players</Label>
+                        <RadioGroup defaultValue="2" onValueChange={handlePlayerCountChange} className="flex gap-4">
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="2" id="p2" />
+                                <Label htmlFor="p2">2 Players</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="4" id="p4" />
+                                <Label htmlFor="p4">4 Players</Label>
+                            </div>
+                        </RadioGroup>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {players.slice(0, numPlayers).map((player, index) => (
+                            <div key={index} className="space-y-4 p-4 border rounded-lg">
+                                <h3 className="font-semibold flex items-center gap-2"><Users className="w-5 h-5" /> Player {index + 1}</h3>
+                                <div className="space-y-2">
+                                    <Label htmlFor={`p${index}-name`}>Name</Label>
+                                    <Input
+                                        id={`p${index}-name`}
+                                        value={player.name}
+                                        onChange={(e) => handlePlayerChange(index, 'name', e.target.value)}
+                                        placeholder={`Enter name for Player ${index + 1}`}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor={`p${index}-color`}>Color</Label>
+                                    <Select
+                                        value={player.color}
+                                        onValueChange={(value) => handlePlayerChange(index, 'color', value)}
+                                    >
+                                        <SelectTrigger id={`p${index}-color`}>
+                                            <SelectValue placeholder="Select a color" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {availableColors(index).map(color => (
+                                                <SelectItem key={color} value={color}>
+                                                    <span className="flex items-center gap-2">
+                                                        <div className={`w-4 h-4 rounded-full ${PLAYER_COLORS[color].bg}`}></div>
+                                                        {PLAYER_COLORS[color].name}
+                                                    </span>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <Button onClick={handleStartGame} className="w-full">Start Game</Button>
+                </CardContent>
+            </Card>
+        </main>
+    );
 }
