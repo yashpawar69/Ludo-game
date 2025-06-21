@@ -90,12 +90,16 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove, d
     const blueStart = PATH_MAP.blue[0];
     const arrowBaseClass = "w-4 h-4 z-10 place-self-center pointer-events-none";
 
+    // Red moves Right from {7,2}
+    // Green moves Down from {1,9}
+    // Yellow moves Left from {9,14}
+    // Blue moves Up from {15,7}
     return (
         <>
-            <ArrowUp style={{gridRow: redStart.row, gridColumn: redStart.col}} className={cn(arrowBaseClass, "text-white")} />
-            <ArrowRight style={{gridRow: greenStart.row, gridColumn: greenStart.col}} className={cn(arrowBaseClass, "text-white")} />
-            <ArrowDown style={{gridRow: yellowStart.row, gridColumn: yellowStart.col}} className={cn(arrowBaseClass, "text-black")} />
-            <ArrowLeft style={{gridRow: blueStart.row, gridColumn: blueStart.col}} className={cn(arrowBaseClass, "text-white")} />
+            <ArrowRight style={{gridRow: redStart.row, gridColumn: redStart.col}} className={cn(arrowBaseClass, "text-white")} />
+            <ArrowDown style={{gridRow: greenStart.row, gridColumn: greenStart.col}} className={cn(arrowBaseClass, "text-white")} />
+            <ArrowLeft style={{gridRow: yellowStart.row, gridColumn: yellowStart.col}} className={cn(arrowBaseClass, "text-white")} />
+            <ArrowUp style={{gridRow: blueStart.row, gridColumn: blueStart.col}} className={cn(arrowBaseClass, "text-white")} />
         </>
     )
   }
