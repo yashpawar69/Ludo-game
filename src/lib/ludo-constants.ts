@@ -68,10 +68,10 @@ export function isSafeSquare(gridPos: GridPos): boolean {
 
 export const BOARD_LAYOUT: Cell[] = [
   // Bases
-  { id: 'red-base',    type: 'base', color: 'red',    row: 1, col: 1,  span: { row: 6, col: 6 }, itemPositions: [{row: 3, col: 3}, {row: 3, col: 4}, {row: 4, col: 3}, {row: 4, col: 4}] },
-  { id: 'green-base',  type: 'base', color: 'green',  row: 1, col: 10, span: { row: 6, col: 6 }, itemPositions: [{row: 3, col: 12}, {row: 3, col: 13}, {row: 4, col: 12}, {row: 4, col: 13}] },
-  { id: 'blue-base',   type: 'base', color: 'blue',   row: 10, col: 1, span: { row: 6, col: 6 }, itemPositions: [{row: 12, col: 3}, {row: 12, col: 4}, {row: 13, col: 3}, {row: 13, col: 4}] },
-  { id: 'yellow-base', type: 'base', color: 'yellow', row: 10, col: 10,span: { row: 6, col: 6 }, itemPositions: [{row: 12, col: 12}, {row: 12, col: 13}, {row: 13, col: 12}, {row: 13, col: 13}] },
+  { id: 'red-base',    type: 'base', color: 'red',    row: 1, col: 1,  span: { row: 6, col: 6 } },
+  { id: 'green-base',  type: 'base', color: 'green',  row: 1, col: 10, span: { row: 6, col: 6 } },
+  { id: 'blue-base',   type: 'base', color: 'blue',   row: 10, col: 1, span: { row: 6, col: 6 } },
+  { id: 'yellow-base', type: 'base', color: 'yellow', row: 10, col: 10,span: { row: 6, col: 6 } },
   
   // Home Finish
   { id: 'home-finish', type: 'home-finish', row: 7, col: 7, span: { row: 3, col: 3 }},
@@ -108,12 +108,12 @@ const createPlayerPath = (startIdx: number, path: GridPos[]) => {
     const mainPath = [...path.slice(startIdx), ...path.slice(0, startIdx)];
     // The 52nd square is the entry to the home path.
     // So the logical path for a player is their 51 squares + their home path.
-    return mainPath.slice(0, 51);
+    return mainPath.slice(0, 52);
 }
 
 export const START_INDICES: Record<PlayerColor, number> = { red: 0, green: 13, yellow: 26, blue: 39 };
 
-// PATH_MAP takes a player's logical position (0-50) and returns the GridPos on the board.
+// PATH_MAP takes a player's logical position (0-51) and returns the GridPos on the board.
 export const PATH_MAP: Record<PlayerColor, GridPos[]> = {
     red: createPlayerPath(START_INDICES.red, ABSOLUTE_PATH),
     green: createPlayerPath(START_INDICES.green, ABSOLUTE_PATH),

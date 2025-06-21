@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Star, ArrowUp, ArrowRight, ArrowDown, ArrowLeft } from 'lucide-react';
-import { BOARD_LAYOUT, PATH_MAP, HOME_PATH_START_POS, FINISHED_POS, START_INDICES } from '@/lib/ludo-constants';
+import { BOARD_LAYOUT, PATH_MAP, HOME_PATH_START_POS, FINISHED_POS, START_INDICES, PLAYER_COLORS } from '@/lib/ludo-constants';
 import type { PlayerColor, Player } from './LudoGame';
 import { Dice } from './Dice';
 
@@ -25,22 +25,33 @@ interface LudoBoardProps {
 
 export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove, diceProps }: LudoBoardProps) {
 
-  const renderTokens = () => {
+  const colorClasses: Record<PlayerColor, string> = {
+    red: 'bg-red-500',
+    green: 'bg-green-500',
+    yellow: 'bg-yellow-400',
+    blue: 'bg-blue-500',
+  };
+
+  const tokenBorderClasses: Record<PlayerColor, string> = {
+    red: 'border-red-700',
+    green: 'border-green-700',
+    yellow: 'border-yellow-600',
+    blue: 'border-blue-700',
+  };
+
+  const renderOnPathTokens = () => {
     return players.flatMap(player => 
       player.tokens.map((pos, tokenIndex) => {
+        if (pos === -1 || pos === FINISHED_POS) {
+            return null;
+        }
+
         const tokenId = `${player.id}-${tokenIndex}`;
         let gridPos;
 
-        if (pos === -1) { // In base
-          const baseInfo = BOARD_LAYOUT.find(c => c.type === 'base' && c.color === player.id);
-          if (!baseInfo || !baseInfo.itemPositions) return null;
-          gridPos = baseInfo.itemPositions[tokenIndex];
-        } else if (pos === FINISHED_POS) { // Finished - place in the center
-            // Tokens that are finished will be visually represented on the player card, not the board center.
-            return null;
-        } else if (pos >= HOME_PATH_START_POS) { // Home path
+        if (pos >= HOME_PATH_START_POS) { // Home path
             const homePathIndex = pos - HOME_PATH_START_POS; // 0-5
-            const homePathId = `${player.id}-h${homePathIndex}`;
+            const homePathId = `${player.id}-h${homePathIndex + 1}`;
             const cell = BOARD_LAYOUT.find(c => c.id === homePathId);
             if (!cell) return null;
             gridPos = { row: cell.row, col: cell.col };
@@ -65,12 +76,8 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove, d
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             className={cn(
                 "flex items-center justify-center rounded-full h-8 w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 border-4 shadow-lg",
-                {
-                    'bg-red-500 border-red-700': player.id === 'red',
-                    'bg-green-500 border-green-700': player.id === 'green',
-                    'bg-yellow-400 border-yellow-600': player.id === 'yellow',
-                    'bg-blue-500 border-blue-700': player.id === 'blue',
-                },
+                tokenBorderClasses[player.id],
+                colorClasses[player.id],
                 isMovable && "cursor-pointer ring-4 ring-accent ring-offset-background",
                 isMovable && "animate-bounce"
             )}
@@ -109,18 +116,42 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove, d
           const style = { gridRow: `${row} / span ${span?.row || 1}`, gridColumn: `${col} / span ${span?.col || 1}` };
           
           if (type === 'base') {
+            const player = players.find(p => p.id === color);
+            const baseTokenIndices = player?.tokens.reduce<number[]>((acc, pos, i) => {
+                if (pos === -1) acc.push(i);
+                return acc;
+            }, []) || [];
+
             return (
-              <div key={id} style={style} className={cn('rounded-lg flex items-center justify-center p-1', {
-                  'bg-red-500': color === 'red',
-                  'bg-green-500': color === 'green',
-                  'bg-yellow-400': color === 'yellow',
-                  'bg-blue-500': color === 'blue',
-              })}>
+              <div key={id} style={style} className={cn('rounded-lg flex items-center justify-center p-1', colorClasses[color!])}>
                  <div className="grid grid-cols-2 grid-rows-2 gap-2 w-full h-full bg-black/20 rounded-md p-2">
-                    <div className="bg-white/80 rounded-full border-2 border-white/90"></div>
-                    <div className="bg-white/80 rounded-full border-2 border-white/90"></div>
-                    <div className="bg-white/80 rounded-full border-2 border-white/90"></div>
-                    <div className="bg-white/80 rounded-full border-2 border-white/90"></div>
+                    {[0, 1, 2, 3].map(circleIndex => {
+                        const tokenIndex = baseTokenIndices[circleIndex];
+                        const hasToken = tokenIndex !== undefined;
+                        const isMovable = hasToken && activePlayer === player?.id && movableTokens.includes(tokenIndex);
+                        
+                        return (
+                            <div key={circleIndex} className="bg-white/80 rounded-full border-2 border-white/90 flex items-center justify-center">
+                                {hasToken && player && (
+                                     <motion.div
+                                        key={`${player.id}-${tokenIndex}`}
+                                        layoutId={`${player.id}-${tokenIndex}`}
+                                        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                                        className={cn(
+                                            "flex items-center justify-center rounded-full h-8 w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 border-4 shadow-lg",
+                                            tokenBorderClasses[player.id],
+                                            colorClasses[player.id],
+                                            isMovable && "cursor-pointer ring-4 ring-accent ring-offset-background",
+                                            isMovable && "animate-bounce"
+                                        )}
+                                        onClick={() => isMovable && onTokenMove(tokenIndex)}
+                                     >
+                                        <div className="h-3 w-3 md:h-4 md:w-4 rounded-full bg-white/70 border border-black/20"></div>
+                                     </motion.div>
+                                )}
+                            </div>
+                        )
+                    })}
                 </div>
               </div>
             );
@@ -145,9 +176,12 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove, d
             const isGreenStart = id === `path-main-${START_INDICES.green}`;
             const isYellowStart = id === `path-main-${START_INDICES.yellow}`;
             const isBlueStart = id === `path-main-${START_INDICES.blue}`;
-            const isStart = isRedStart || isGreenStart || isYellowStart || isBlueStart;
             
-            const isWhiteBox = type === 'path' && !isStart;
+            const isFinalSquare = id === `path-main-51`;
+
+            const isColoredStartSquare = isRedStart || isGreenStart || isYellowStart || isBlueStart;
+            
+            const isWhiteBox = type === 'path' && !isColoredStartSquare;
             
             return (
               <div key={id} style={style} className={cn('rounded-sm flex items-center justify-center', 
@@ -167,7 +201,7 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove, d
           
           return <div key={id} style={style} />;
         })}
-        {renderTokens()}
+        {renderOnPathTokens()}
         {renderArrows()}
       </div>
     </div>
