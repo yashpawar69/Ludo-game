@@ -38,8 +38,8 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove, d
         } else if (pos === FINISHED_POS) { // Finished - place in the center
             // Tokens that are finished will be visually represented on the player card, not the board center.
             return null;
-        } else if (pos > HOME_PATH_START_POS) { // Home path
-            const homePathIndex = pos - HOME_PATH_START_POS; // 1-5
+        } else if (pos >= HOME_PATH_START_POS) { // Home path
+            const homePathIndex = pos - HOME_PATH_START_POS; // 0-5
             const homePathId = `${player.id}-h${homePathIndex}`;
             const cell = BOARD_LAYOUT.find(c => c.id === homePathId);
             if (!cell) return null;
@@ -89,17 +89,23 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove, d
     const yellowStart = PATH_MAP.yellow[0];
     const blueStart = PATH_MAP.blue[0];
     const arrowBaseClass = "w-4 h-4 z-10 place-self-center pointer-events-none";
+    
+    // Red moves Right from {7,2} -> {7,3}
+    // Green moves Down from {2,9} -> {3,9}
+    // Yellow moves Left from {9,14} -> {9,13}
+    // Blue moves Up from {14,7} -> {13,7}
 
-    // Red moves Right from {7,2}
-    // Green moves Down from {1,9}
-    // Yellow moves Left from {9,14}
-    // Blue moves Up from {15,7}
+    const redArrowPos = PATH_MAP.red[START_INDICES.red];
+    const greenArrowPos = PATH_MAP.green[START_INDICES.green - 13];
+    const yellowArrowPos = PATH_MAP.yellow[START_INDICES.yellow - 26];
+    const blueArrowPos = PATH_MAP.blue[START_INDICES.blue - 39];
+
     return (
         <>
-            <ArrowRight style={{gridRow: redStart.row, gridColumn: redStart.col}} className={cn(arrowBaseClass, "text-white")} />
-            <ArrowDown style={{gridRow: greenStart.row, gridColumn: greenStart.col}} className={cn(arrowBaseClass, "text-white")} />
-            <ArrowLeft style={{gridRow: yellowStart.row, gridColumn: yellowStart.col}} className={cn(arrowBaseClass, "text-white")} />
-            <ArrowUp style={{gridRow: blueStart.row, gridColumn: blueStart.col}} className={cn(arrowBaseClass, "text-white")} />
+            <ArrowRight style={{gridRow: redArrowPos.row, gridColumn: redArrowPos.col}} className={cn(arrowBaseClass, "text-white")} />
+            <ArrowDown style={{gridRow: greenArrowPos.row, gridColumn: greenArrowPos.col}} className={cn(arrowBaseClass, "text-white")} />
+            <ArrowLeft style={{gridRow: yellowArrowPos.row, gridColumn: yellowArrowPos.col}} className={cn(arrowBaseClass, "text-white")} />
+            <ArrowUp style={{gridRow: blueArrowPos.row, gridColumn: blueArrowPos.col}} className={cn(arrowBaseClass, "text-white")} />
         </>
     )
   }
@@ -162,12 +168,11 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove, d
                   'bg-blue-400': (type === 'home-path' && color === 'blue') || isBlueStart,
                 }
               )}>
-                {isSafe && !isWhiteBox && <Star className={cn("w-3/4 h-3/4", isStart ? 'text-white/80' : 'text-white/50')} />}
-                {isWhiteBox && (
-                    <span className="text-black text-xs font-semibold">
-                        {parseInt(id.split('-')[2]) + 1}
-                    </span>
-                )}
+                {isWhiteBox && id === 'path-main-51' ? (
+                     <span className="text-black text-xs font-semibold">52</span>
+                ) : (isSafe && isWhiteBox && <Star className={cn("w-3/4 h-3/4", 'text-black/20')} />)
+                }
+                {isSafe && !isWhiteBox && <Star className={cn("w-3/4 h-3/4", 'text-white/80')} />}
               </div>
             );
           }
