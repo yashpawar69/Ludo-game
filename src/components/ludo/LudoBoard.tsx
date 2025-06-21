@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Star, ArrowUp, ArrowRight, ArrowDown, ArrowLeft } from 'lucide-react';
-import { PLAYER_COLORS, BOARD_LAYOUT, PATH_MAP, HOME_PATH_START_POS, FINISHED_POS } from '@/lib/ludo-constants';
+import { BOARD_LAYOUT, PATH_MAP, HOME_PATH_START_POS, FINISHED_POS } from '@/lib/ludo-constants';
 import type { PlayerColor, Player } from './LudoGame';
 import { Dice } from './Dice';
 
@@ -65,8 +65,12 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove, d
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             className={cn(
                 "flex items-center justify-center rounded-full h-8 w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 border-4 shadow-lg",
-                PLAYER_COLORS[player.id].bg,
-                PLAYER_COLORS[player.id].border,
+                {
+                    'bg-red-500 border-red-700': player.id === 'red',
+                    'bg-green-500 border-green-700': player.id === 'green',
+                    'bg-yellow-400 border-yellow-600': player.id === 'yellow',
+                    'bg-blue-500 border-blue-700': player.id === 'blue',
+                },
                 isMovable && "cursor-pointer ring-4 ring-accent ring-offset-background",
                 isMovable && "animate-bounce"
             )}
@@ -105,7 +109,12 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove, d
           
           if (type === 'base') {
             return (
-              <div key={id} style={style} className={cn('rounded-lg', PLAYER_COLORS[color!].bg, 'flex items-center justify-center p-1')}>
+              <div key={id} style={style} className={cn('rounded-lg flex items-center justify-center p-1', {
+                  'bg-red-500': color === 'red',
+                  'bg-green-500': color === 'green',
+                  'bg-yellow-400': color === 'yellow',
+                  'bg-blue-500': color === 'blue',
+              })}>
                  <div className="grid grid-cols-2 grid-rows-2 gap-2 w-full h-full bg-black/20 rounded-md p-2">
                     <div className="bg-white/80 rounded-full border-2 border-white/90"></div>
                     <div className="bg-white/80 rounded-full border-2 border-white/90"></div>
@@ -119,10 +128,10 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove, d
           if (type === 'home-finish') {
             return (
               <div key={id} style={style} className={cn('flex items-center justify-center relative bg-card/50')}>
-                 <div className={cn("absolute inset-0", PLAYER_COLORS['red'].lightBg)} style={{clipPath: 'polygon(0 0, 50% 50%, 0 100%)'}}></div>
-                 <div className={cn("absolute inset-0", PLAYER_COLORS['green'].lightBg)} style={{clipPath: 'polygon(0 0, 100% 0, 50% 50%)'}}></div>
-                 <div className={cn("absolute inset-0", PLAYER_COLORS['yellow'].lightBg)} style={{clipPath: 'polygon(100% 0, 50% 50%, 100% 100%)'}}></div>
-                 <div className={cn("absolute inset-0", PLAYER_COLORS['blue'].lightBg)} style={{clipPath: 'polygon(0 100%, 100% 100%, 50% 50%)'}}></div>
+                 <div className="absolute inset-0 bg-red-400" style={{clipPath: 'polygon(0 0, 50% 50%, 0 100%)'}}></div>
+                 <div className="absolute inset-0 bg-green-400" style={{clipPath: 'polygon(0 0, 100% 0, 50% 50%)'}}></div>
+                 <div className="absolute inset-0 bg-yellow-300" style={{clipPath: 'polygon(100% 0, 50% 50%, 100% 100%)'}}></div>
+                 <div className="absolute inset-0 bg-blue-400" style={{clipPath: 'polygon(0 100%, 100% 100%, 50% 50%)'}}></div>
                  <div className="relative z-10">
                     <Dice {...diceProps} />
                  </div>
@@ -131,10 +140,16 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove, d
           }
           
           if (type === 'path' || type === 'home-path') {
-            const pathColor = type === 'path' ? 'bg-white' : PLAYER_COLORS[color!].lightBg;
             const starColor = type === 'path' ? 'text-gray-300' : 'text-white/50';
             return (
-              <div key={id} style={style} className={cn('rounded-sm', pathColor, 'flex items-center justify-center')}>
+              <div key={id} style={style} className={cn('rounded-sm flex items-center justify-center', 
+                type === 'path' ? 'bg-white' : {
+                    'bg-red-400': color === 'red',
+                    'bg-green-400': color === 'green',
+                    'bg-yellow-300': color === 'yellow',
+                    'bg-blue-400': color === 'blue',
+                }
+              )}>
                 {isSafe && <Star className={cn("w-3/4 h-3/4", starColor)} />}
               </div>
             );

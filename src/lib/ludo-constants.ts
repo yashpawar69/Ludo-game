@@ -1,10 +1,10 @@
 type PlayerColor = 'red' | 'green' | 'yellow' | 'blue';
 
-export const PLAYER_COLORS: Record<PlayerColor, { name: string, bg: string, lightBg: string, darkBg: string, border: string }> = {
-  red:    { name: 'Red',    bg: 'bg-red-500',    lightBg: 'bg-red-400',    darkBg: 'bg-red-700',    border: 'border-red-700' },
-  green:  { name: 'Green',  bg: 'bg-green-500',  lightBg: 'bg-green-400',  darkBg: 'bg-green-700',  border: 'border-green-700' },
-  yellow: { name: 'Yellow', bg: 'bg-yellow-400', lightBg: 'bg-yellow-300', darkBg: 'bg-yellow-600', border: 'border-yellow-600' },
-  blue:   { name: 'Blue',   bg: 'bg-blue-500',   lightBg: 'bg-blue-400',   darkBg: 'bg-blue-700',   border: 'border-blue-700' },
+export const PLAYER_COLORS: Record<PlayerColor, { name: string }> = {
+  red:    { name: 'Red' },
+  green:  { name: 'Green' },
+  yellow: { name: 'Yellow' },
+  blue:   { name: 'Blue' },
 };
 
 export type GridPos = { row: number; col: number };

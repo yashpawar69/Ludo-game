@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Gamepad2, Users } from 'lucide-react';
 import { PLAYER_COLORS } from '@/lib/ludo-constants';
 import type { PlayerColor } from '@/components/ludo/LudoGame';
+import { cn } from '@/lib/utils';
 
 const ALL_COLORS = Object.keys(PLAYER_COLORS) as PlayerColor[];
 
@@ -116,7 +117,12 @@ export default function SetupPage() {
                                             {availableColors(index).map(color => (
                                                 <SelectItem key={color} value={color}>
                                                     <span className="flex items-center gap-2">
-                                                        <div className={`w-4 h-4 rounded-full ${PLAYER_COLORS[color].bg}`}></div>
+                                                        <div className={cn('w-4 h-4 rounded-full', {
+                                                            'bg-red-500': color === 'red',
+                                                            'bg-green-500': color === 'green',
+                                                            'bg-yellow-400': color === 'yellow',
+                                                            'bg-blue-500': color === 'blue',
+                                                        })} />
                                                         {PLAYER_COLORS[color].name}
                                                     </span>
                                                 </SelectItem>
