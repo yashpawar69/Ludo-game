@@ -71,7 +71,7 @@ export function LudoGame({ roomId, initialPlayers }: { roomId: string, initialPl
 
         if (pos < HOME_PATH_START_POS) { 
             if (pos + roll > mainPathLength) { 
-                const homePathPos = HOME_PATH_START_POS + (pos + roll - mainPathLength);
+                const homePathPos = HOME_PATH_START_POS + (pos + roll - (mainPathLength + 1));
                 if (homePathPos <= FINISHED_POS) {
                     movable.push(tokenIndex);
                 }
@@ -105,7 +105,7 @@ export function LudoGame({ roomId, initialPlayers }: { roomId: string, initialPl
     } else if (currentPos >= HOME_PATH_START_POS) {
         newPos = currentPos + diceValue;
     } else if (currentPos + diceValue > mainPathLength) {
-        newPos = HOME_PATH_START_POS + (currentPos + diceValue - mainPathLength);
+        newPos = HOME_PATH_START_POS + (currentPos + diceValue - (mainPathLength + 1));
     } else {
         newPos = currentPos + diceValue;
     }
