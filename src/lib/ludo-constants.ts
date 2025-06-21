@@ -39,7 +39,8 @@ export const ABSOLUTE_PATH: GridPos[] = [
     {row: 15, col: 8},
     {row: 15, col: 7}, {row: 14, col: 7}, {row: 13, col: 7}, {row: 12, col: 7}, {row: 11, col: 7}, {row: 10, col: 7},
     {row: 9, col: 6}, {row: 9, col: 5}, {row: 9, col: 4}, {row: 9, col: 3}, {row: 9, col: 2}, {row: 9, col: 1},
-    {row: 8, col: 1} // Path index 51, red home entry point
+    {row: 8, col: 1},
+    {row: 7, col: 1},
 ];
 
 const HOME_PATHS: Record<PlayerColor, GridPos[]> = {
