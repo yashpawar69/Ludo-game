@@ -41,7 +41,7 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove, d
         } else if (pos > HOME_PATH_START_POS) { // Home path
             const homePathIndex = pos - HOME_PATH_START_POS; // 1-5
             const homePathId = `${player.id}-h${homePathIndex}`;
-            const cell = BOARD_layout.find(c => c.id === homePathId);
+            const cell = BOARD_LAYOUT.find(c => c.id === homePathId);
             if (!cell) return null;
             gridPos = { row: cell.row, col: cell.col };
         } else { // Main path
@@ -71,7 +71,6 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove, d
                 isMovable && "animate-bounce"
             )}
             onClick={() => isMovable && onTokenMove(tokenIndex)}
-            style={{ gridRow: gridPos.row, gridColumn: gridPos.col }}
           >
              <div className="h-3 w-3 md:h-4 md:w-4 rounded-full bg-white/70 border border-black/20"></div>
           </motion.div>
