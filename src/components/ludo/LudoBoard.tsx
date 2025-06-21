@@ -3,23 +3,27 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Home, Star, Crown, ArrowUp, ArrowRight, ArrowDown, ArrowLeft } from 'lucide-react';
+import { Star, ArrowUp, ArrowRight, ArrowDown, ArrowLeft } from 'lucide-react';
 import { PLAYER_COLORS, BOARD_LAYOUT, PATH_MAP, HOME_PATH_START_POS, FINISHED_POS } from '@/lib/ludo-constants';
+import type { PlayerColor, Player } from './LudoGame';
+import { Dice } from './Dice';
 
-type PlayerColor = 'red' | 'green' | 'yellow' | 'blue';
-type Player = {
-  id: PlayerColor;
-  tokens: number[];
-};
+interface DiceProps {
+  onRoll: (value: number) => void;
+  value: number | null;
+  activePlayerColor: PlayerColor;
+  disabled: boolean;
+}
 
 interface LudoBoardProps {
   players: Player[];
   activePlayer: PlayerColor;
   movableTokens: number[];
   onTokenMove: (tokenIndex: number) => void;
+  diceProps: DiceProps;
 }
 
-export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove }: LudoBoardProps) {
+export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove, diceProps }: LudoBoardProps) {
 
   const renderTokens = () => {
     return players.flatMap(player => 
@@ -32,14 +36,12 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove }:
           if (!baseInfo || !baseInfo.itemPositions) return null;
           gridPos = baseInfo.itemPositions[tokenIndex];
         } else if (pos === FINISHED_POS) { // Finished - place in the center
-            const homeInfo = BOARD_LAYOUT.find(c => c.type === 'home-finish');
-            if (!homeInfo || !homeInfo.itemPositions) return null;
-            const playerIndex = players.findIndex(p => p.id === player.id);
-            gridPos = homeInfo.itemPositions[playerIndex];
+            // Tokens that are finished will be visually represented on the player card, not the board center.
+            return null;
         } else if (pos > HOME_PATH_START_POS) { // Home path
             const homePathIndex = pos - HOME_PATH_START_POS; // 1-5
             const homePathId = `${player.id}-h${homePathIndex}`;
-            const cell = BOARD_LAYOUT.find(c => c.id === homePathId);
+            const cell = BOARD_layout.find(c => c.id === homePathId);
             if (!cell) return null;
             gridPos = { row: cell.row, col: cell.col };
         } else { // Main path
@@ -106,10 +108,10 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove }:
             return (
               <div key={id} style={style} className={cn('rounded-lg', PLAYER_COLORS[color!].bg, 'flex items-center justify-center p-1')}>
                  <div className="grid grid-cols-2 grid-rows-2 gap-2 w-full h-full bg-black/20 rounded-md p-2">
-                    <div className="bg-white/50 rounded-full"></div>
-                    <div className="bg-white/50 rounded-full"></div>
-                    <div className="bg-white/50 rounded-full"></div>
-                    <div className="bg-white/50 rounded-full"></div>
+                    <div className="bg-white/80 rounded-full border-2 border-white/90"></div>
+                    <div className="bg-white/80 rounded-full border-2 border-white/90"></div>
+                    <div className="bg-white/80 rounded-full border-2 border-white/90"></div>
+                    <div className="bg-white/80 rounded-full border-2 border-white/90"></div>
                 </div>
               </div>
             );
@@ -117,12 +119,14 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove }:
 
           if (type === 'home-finish') {
             return (
-              <div key={id} style={style} className={cn('flex items-center justify-center relative')}>
-                 <div className={cn("absolute inset-0", PLAYER_COLORS['red'].bg)} style={{clipPath: 'polygon(0 0, 50% 50%, 0 100%)'}}></div>
-                 <div className={cn("absolute inset-0", PLAYER_COLORS['green'].bg)} style={{clipPath: 'polygon(0 0, 100% 0, 50% 50%)'}}></div>
-                 <div className={cn("absolute inset-0", PLAYER_COLORS['yellow'].bg)} style={{clipPath: 'polygon(100% 0, 50% 50%, 100% 100%)'}}></div>
-                 <div className={cn("absolute inset-0", PLAYER_COLORS['blue'].bg)} style={{clipPath: 'polygon(0 100%, 100% 100%, 50% 50%)'}}></div>
-                 <Crown className="w-1/2 h-1/2 text-accent relative z-10" />
+              <div key={id} style={style} className={cn('flex items-center justify-center relative bg-card/50')}>
+                 <div className={cn("absolute inset-0", PLAYER_COLORS['red'].lightBg)} style={{clipPath: 'polygon(0 0, 50% 50%, 0 100%)'}}></div>
+                 <div className={cn("absolute inset-0", PLAYER_COLORS['green'].lightBg)} style={{clipPath: 'polygon(0 0, 100% 0, 50% 50%)'}}></div>
+                 <div className={cn("absolute inset-0", PLAYER_COLORS['yellow'].lightBg)} style={{clipPath: 'polygon(100% 0, 50% 50%, 100% 100%)'}}></div>
+                 <div className={cn("absolute inset-0", PLAYER_COLORS['blue'].lightBg)} style={{clipPath: 'polygon(0 100%, 100% 100%, 50% 50%)'}}></div>
+                 <div className="relative z-10">
+                    <Dice {...diceProps} />
+                 </div>
               </div>
             );
           }
