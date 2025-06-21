@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { User, Home, Crown } from 'lucide-react';
-import { PLAYER_COLORS } from '@/lib/ludo-constants';
+import { PLAYER_COLORS, FINISHED_POS } from '@/lib/ludo-constants';
 
 type PlayerColor = 'red' | 'green' | 'yellow' | 'blue';
 type Player = {
@@ -20,7 +20,7 @@ interface PlayerCardProps {
 
 export function PlayerCard({ player, isActive }: PlayerCardProps) {
   const tokensInBase = player.tokens.filter(p => p === -1).length;
-  const tokensFinished = player.tokens.filter(p => p === 106).length;
+  const tokensFinished = player.tokens.filter(p => p === FINISHED_POS).length;
 
   return (
     <Card className={cn('transition-all duration-300', isActive ? 'shadow-lg ring-2 ring-accent' : 'shadow-md')}>
