@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Home, Star, Crown } from 'lucide-react';
+import { Home, Star, Crown, ArrowUp, ArrowRight, ArrowDown, ArrowLeft } from 'lucide-react';
 import { PLAYER_COLORS, BOARD_LAYOUT, PATH_MAP, HOME_PATH_START_POS, FINISHED_POS } from '@/lib/ludo-constants';
 
 type PlayerColor = 'red' | 'green' | 'yellow' | 'blue';
@@ -62,7 +62,7 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove }:
             }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             className={cn(
-                "flex items-center justify-center rounded-full h-8 w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 border-2 shadow-lg",
+                "flex items-center justify-center rounded-full h-8 w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 border-4 shadow-lg",
                 PLAYER_COLORS[player.id].bg,
                 PLAYER_COLORS[player.id].border,
                 isMovable && "cursor-pointer ring-4 ring-accent ring-offset-background",
@@ -71,15 +71,32 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove }:
             onClick={() => isMovable && onTokenMove(tokenIndex)}
             style={{ gridRow: gridPos.row, gridColumn: gridPos.col }}
           >
-             <div className="h-4 w-4 md:h-5 md:w-5 rounded-full bg-white/50"></div>
+             <div className="h-3 w-3 md:h-4 md:w-4 rounded-full bg-white/70 border border-black/20"></div>
           </motion.div>
         );
       })
     );
   };
+
+  const renderArrows = () => {
+    const redStart = PATH_MAP.red[0];
+    const greenStart = PATH_MAP.green[0];
+    const yellowStart = PATH_MAP.yellow[0];
+    const blueStart = PATH_MAP.blue[0];
+    const arrowBaseClass = "w-4 h-4 z-10 place-self-center pointer-events-none";
+
+    return (
+        <>
+            <ArrowUp style={{gridRow: redStart.row, gridColumn: redStart.col}} className={cn(arrowBaseClass, "text-red-500")} />
+            <ArrowRight style={{gridRow: greenStart.row, gridColumn: greenStart.col}} className={cn(arrowBaseClass, "text-green-500")} />
+            <ArrowDown style={{gridRow: yellowStart.row, gridColumn: yellowStart.col}} className={cn(arrowBaseClass, "text-yellow-400")} />
+            <ArrowLeft style={{gridRow: blueStart.row, gridColumn: blueStart.col}} className={cn(arrowBaseClass, "text-blue-500")} />
+        </>
+    )
+  }
   
   return (
-    <div className="relative aspect-square w-full max-w-[400px] md:max-w-[500px] lg:max-w-[600px] xl:max-w-[700px] p-2 bg-muted rounded-lg shadow-inner">
+    <div className="relative aspect-square w-full max-w-[400px] md:max-w-[500px] lg:max-w-[600px] xl:max-w-[700px] p-2 bg-card rounded-lg shadow-inner">
       <div className="grid grid-cols-15 grid-rows-15 w-full h-full gap-px">
         {BOARD_LAYOUT.map(cell => {
           const { type, color, id, row, col, span, isSafe } = cell;
@@ -87,8 +104,13 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove }:
           
           if (type === 'base') {
             return (
-              <div key={id} style={style} className={cn('rounded-lg', PLAYER_COLORS[color!].bg, 'flex items-center justify-center p-2')}>
-                  <Home className="w-1/2 h-1/2 text-white/50" />
+              <div key={id} style={style} className={cn('rounded-lg', PLAYER_COLORS[color!].bg, 'flex items-center justify-center p-1')}>
+                 <div className="grid grid-cols-2 grid-rows-2 gap-2 w-full h-full bg-black/20 rounded-md p-2">
+                    <div className="bg-white/50 rounded-full"></div>
+                    <div className="bg-white/50 rounded-full"></div>
+                    <div className="bg-white/50 rounded-full"></div>
+                    <div className="bg-white/50 rounded-full"></div>
+                </div>
               </div>
             );
           }
@@ -106,10 +128,11 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove }:
           }
           
           if (type === 'path' || type === 'home-path') {
-            const pathColor = type === 'path' ? 'bg-card' : PLAYER_COLORS[color!].lightBg;
+            const pathColor = type === 'path' ? 'bg-white' : PLAYER_COLORS[color!].lightBg;
+            const starColor = type === 'path' ? 'text-gray-300' : 'text-white/50';
             return (
               <div key={id} style={style} className={cn('rounded-sm', pathColor, 'flex items-center justify-center')}>
-                {isSafe && <Star className="w-3/4 h-3/4 text-muted-foreground/30" />}
+                {isSafe && <Star className={cn("w-3/4 h-3/4", starColor)} />}
               </div>
             );
           }
@@ -117,6 +140,7 @@ export function LudoBoard({ players, activePlayer, movableTokens, onTokenMove }:
           return <div key={id} style={style} />;
         })}
         {renderTokens()}
+        {renderArrows()}
       </div>
     </div>
   );

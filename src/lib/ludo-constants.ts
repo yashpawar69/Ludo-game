@@ -1,10 +1,10 @@
 type PlayerColor = 'red' | 'green' | 'yellow' | 'blue';
 
 export const PLAYER_COLORS: Record<PlayerColor, { name: string, bg: string, lightBg: string, darkBg: string, border: string }> = {
-  red:    { name: 'Red',    bg: 'bg-red-500',    lightBg: 'bg-red-200',    darkBg: 'bg-red-600',    border: 'border-red-700' },
-  green:  { name: 'Green',  bg: 'bg-green-500',  lightBg: 'bg-green-200',  darkBg: 'bg-green-600',  border: 'border-green-700' },
-  yellow: { name: 'Yellow', bg: 'bg-yellow-400', lightBg: 'bg-yellow-200', darkBg: 'bg-yellow-500', border: 'border-yellow-600' },
-  blue:   { name: 'Blue',   bg: 'bg-blue-500',   lightBg: 'bg-blue-200',   darkBg: 'bg-blue-600',   border: 'border-blue-700' },
+  red:    { name: 'Red',    bg: 'bg-red-600',    lightBg: 'bg-red-400',    darkBg: 'bg-red-700',    border: 'border-red-800' },
+  green:  { name: 'Green',  bg: 'bg-green-600',  lightBg: 'bg-green-400',  darkBg: 'bg-green-700',  border: 'border-green-800' },
+  yellow: { name: 'Yellow', bg: 'bg-yellow-500', lightBg: 'bg-yellow-300', darkBg: 'bg-yellow-600', border: 'border-yellow-700' },
+  blue:   { name: 'Blue',   bg: 'bg-blue-600',   lightBg: 'bg-blue-400',   darkBg: 'bg-blue-700',   border: 'border-blue-800' },
 };
 
 export type GridPos = { row: number; col: number };
@@ -66,10 +66,10 @@ export function isSafeSquare(gridPos: GridPos): boolean {
 
 export const BOARD_LAYOUT: Cell[] = [
   // Bases
-  { id: 'red-base',    type: 'base', color: 'red',    row: 1, col: 1,  span: { row: 6, col: 6 }, itemPositions: [{row: 2, col: 2}, {row: 2, col: 5}, {row: 5, col: 2}, {row: 5, col: 5}] },
-  { id: 'green-base',  type: 'base', color: 'green',  row: 1, col: 10, span: { row: 6, col: 6 }, itemPositions: [{row: 2, col: 11}, {row: 2, col: 14}, {row: 5, col: 11}, {row: 5, col: 14}] },
-  { id: 'blue-base',   type: 'base', color: 'blue',   row: 10, col: 1, span: { row: 6, col: 6 }, itemPositions: [{row: 11, col: 2}, {row: 11, col: 5}, {row: 14, col: 2}, {row: 14, col: 5}] },
-  { id: 'yellow-base', type: 'base', color: 'yellow', row: 10, col: 10,span: { row: 6, col: 6 }, itemPositions: [{row: 11, col: 11}, {row: 11, col: 14}, {row: 14, col: 11}, {row: 14, col: 14}] },
+  { id: 'red-base',    type: 'base', color: 'red',    row: 1, col: 1,  span: { row: 6, col: 6 }, itemPositions: [{row: 3, col: 3}, {row: 3, col: 4}, {row: 4, col: 3}, {row: 4, col: 4}] },
+  { id: 'green-base',  type: 'base', color: 'green',  row: 1, col: 10, span: { row: 6, col: 6 }, itemPositions: [{row: 3, col: 12}, {row: 3, col: 13}, {row: 4, col: 12}, {row: 4, col: 13}] },
+  { id: 'blue-base',   type: 'base', color: 'blue',   row: 10, col: 1, span: { row: 6, col: 6 }, itemPositions: [{row: 12, col: 3}, {row: 12, col: 4}, {row: 13, col: 3}, {row: 13, col: 4}] },
+  { id: 'yellow-base', type: 'base', color: 'yellow', row: 10, col: 10,span: { row: 6, col: 6 }, itemPositions: [{row: 12, col: 12}, {row: 12, col: 13}, {row: 13, col: 12}, {row: 13, col: 13}] },
   
   // Home Finish
   { id: 'home-finish', type: 'home-finish', row: 7, col: 7, span: { row: 3, col: 3 }, itemPositions: [{row:7, col: 7}, {row:9, col: 7}, {row:7, col: 9}, {row:9, col: 9}]},
