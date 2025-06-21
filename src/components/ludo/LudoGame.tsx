@@ -90,33 +90,6 @@ export function LudoGame({ roomId, initialPlayers }: { roomId: string, initialPl
     return movable;
   }, []);
 
-  const handleDiceRoll = useCallback((value: number) => {
-    setDiceValue(value);
-    
-    const movable = getMovableTokensForPlayer(activePlayer, value);
-    setMovableTokens(movable);
-
-    toast({
-        title: `${activePlayer.name} rolled a ${value}!`,
-        description: movable.length > 0 ? "Select a token to move." : "No available moves.",
-    });
-
-    if (movable.length === 0) {
-        setTimeout(() => {
-            if (value !== 6) {
-                switchToNextPlayer();
-            } else {
-                setDiceValue(null);
-            }
-        }, 1500);
-    } else if (movable.length === 1) {
-        // Automatically move if only one option
-        setTimeout(() => {
-           handleTokenMove(movable[0]);
-        }, 1000);
-    }
-  }, [activePlayer, getMovableTokensForPlayer, switchToNextPlayer, toast, handleTokenMove]);
-
   const handleTokenMove = useCallback((tokenIndex: number) => {
     if (!diceValue || !movableTokens.includes(tokenIndex)) return;
 
@@ -189,6 +162,33 @@ export function LudoGame({ roomId, initialPlayers }: { roomId: string, initialPl
         switchToNextPlayer();
     }
   }, [diceValue, movableTokens, players, activePlayerId, toast, switchToNextPlayer]);
+
+  const handleDiceRoll = useCallback((value: number) => {
+    setDiceValue(value);
+    
+    const movable = getMovableTokensForPlayer(activePlayer, value);
+    setMovableTokens(movable);
+
+    toast({
+        title: `${activePlayer.name} rolled a ${value}!`,
+        description: movable.length > 0 ? "Select a token to move." : "No available moves.",
+    });
+
+    if (movable.length === 0) {
+        setTimeout(() => {
+            if (value !== 6) {
+                switchToNextPlayer();
+            } else {
+                setDiceValue(null);
+            }
+        }, 1500);
+    } else if (movable.length === 1) {
+        // Automatically move if only one option
+        setTimeout(() => {
+           handleTokenMove(movable[0]);
+        }, 1000);
+    }
+  }, [activePlayer, getMovableTokensForPlayer, switchToNextPlayer, toast, handleTokenMove]);
 
   const getPlayerCardPosition = (index: number, totalPlayers: number) => {
     const positions = ['top-4 left-4', 'top-4 right-4', 'bottom-4 right-4', 'bottom-4 left-4'];
